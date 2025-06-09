@@ -46,8 +46,6 @@ abstract class BaseActivity : ComponentActivity() {
 
 
     @Composable
-    protected abstract fun UpdateUI(
-        modifier: Modifier = Modifier
-    )
+    protected abstract fun UpdateUI(modifier: Modifier)
 
 }
