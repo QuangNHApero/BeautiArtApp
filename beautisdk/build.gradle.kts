@@ -1,20 +1,14 @@
 plugins {
-    alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.android.library)
 }
 
 android {
-    namespace = "com.example.artbeautify"
+    namespace = "com.example.beautisdk"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.artbeautify"
-        minSdk = 24
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -56,6 +50,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(project(":beautisdk"))
-    implementation(project(":common"))
+    implementation(project(":aperoaiservice"))
 }
