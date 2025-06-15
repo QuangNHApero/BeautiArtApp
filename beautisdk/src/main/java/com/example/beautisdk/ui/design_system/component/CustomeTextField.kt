@@ -22,31 +22,27 @@ fun MyTextField(
     placeholderResId: Int = R.string.textfield_placeholder,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = LocalCustomTypography.current.Footnote.medium.copy(color = Color.Black),
-        modifier = modifier
-            .fillMaxWidth(),
-        decorationBox = { innerTextField ->
-            Box(modifier = modifier) {
-                if (value.isBlank()) {
-                    AperoTextView(
-                        text = stringResource(placeholderResId),
-                        textStyle = LocalCustomTypography.current.Footnote.medium.copy(
-                            color = Color(
-                                0x66000000
-                            )
-                        ),
-                        modifier = Modifier
-                            .matchParentSize()
+    Box(modifier = modifier) {
+        if (value.isBlank()) {
+            AperoTextView(
+                text = stringResource(placeholderResId),
+                textStyle = LocalCustomTypography.current.Footnote.medium.copy(
+                    color = Color(
+                        0x66000000
                     )
-                } else {
-                    innerTextField()
-                }
-            }
+                ),
+                modifier = Modifier
+                    .matchParentSize()
+            )
         }
-    )
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = LocalCustomTypography.current.Footnote.medium.copy(color = Color.Black),
+            modifier = modifier
+                .fillMaxWidth()
+        )
+    }
 }
 
 @Preview(name = "MyTextField - 3 lines", showBackground = true, widthDp = 360)

@@ -10,7 +10,6 @@ import android.util.Log
 import coil.ImageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import coil.request.SuccessResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,26 +31,26 @@ object ImageHandlerUtil {
         cacheKey: String? = null,
         widthPx: Int = 430,
         heightPx: Int = 430
-    ): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val request = ImageRequest.Builder(context)
-                .data(uri)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .apply {
-                    if (cacheKey != null) {
-                        memoryCacheKey(cacheKey)
-                        diskCacheKey(cacheKey)
+    ) {
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val request = ImageRequest.Builder(context)
+                    .data(uri)
+                    .apply {
+                        cacheKey?.let {
+                            memoryCacheKey(it)
+                            diskCacheKey(it)
+                        }
+                        size(widthPx, heightPx)
+                        memoryCachePolicy(CachePolicy.ENABLED)
+                        diskCachePolicy(CachePolicy.ENABLED)
                     }
-                    size(widthPx, heightPx)
-                }
-                .build()
+                    .build()
 
-            val result = ImageLoader(context).execute(request)
-            result is SuccessResult
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
+                ImageLoader(context).execute(request)
+            }.onFailure {
+                Log.e(TAG, "Preload failed: ${it.message}", it)
+            }
         }
     }
 
