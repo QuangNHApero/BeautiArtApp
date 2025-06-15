@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/aperoaiservice" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/beautisdk" />
+            <option value="$PROJECT_DIR$/common" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
