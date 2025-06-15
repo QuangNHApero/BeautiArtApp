@@ -105,6 +105,7 @@ object ImageHandlerUtil {
                             Log.e(TAG, "Không thể tạo ảnh mới trong MediaStore.")
                             onError("Không thể tạo ảnh mới trong MediaStore.")
                         }
+                        inputStream.close()
                         return@launch
                     }
 
@@ -114,10 +115,14 @@ object ImageHandlerUtil {
                             Log.e(TAG, "Không thể mở OutputStream để lưu ảnh.")
                             onError("Không thể mở OutputStream để lưu ảnh.")
                         }
+                        inputStream.close()
                         return@launch
                     }
 
-                    outputStream.use { inputStream.copyTo(it) }
+                    outputStream.use {
+                        inputStream.copyTo(it)
+                        inputStream.close()
+                    }
 
                     contentValues.clear()
                     contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
@@ -133,12 +138,14 @@ object ImageHandlerUtil {
                             Log.e(TAG, "Không thể tạo thư mục: ${directory.absolutePath}")
                             onError("Không thể tạo thư mục: ${directory.absolutePath}")
                         }
+                        inputStream.close()
                         return@launch
                     }
 
                     val file = File(directory, fileName)
                     FileOutputStream(file).use { output ->
                         inputStream.copyTo(output)
+                        inputStream.close()
                     }
 
                     val values = ContentValues().apply {
@@ -154,6 +161,7 @@ object ImageHandlerUtil {
 
             } catch (e: Exception) {
                 e.printStackTrace()
+                inputStream.close()
                 withContext(Dispatchers.Main) {
                     Log.e(TAG, "Error saving image: ${e.message}")
                     onError("Lỗi khi lưu ảnh: ${e.localizedMessage ?: "Không rõ lỗi"}")

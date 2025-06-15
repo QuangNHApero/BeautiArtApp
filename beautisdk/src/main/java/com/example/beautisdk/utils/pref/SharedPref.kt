@@ -11,7 +11,7 @@ object SharedPref {
 
     fun initialize(context: Context) {
         if (!::prefs.isInitialized) {
-            prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         }
     }
 
@@ -36,23 +36,19 @@ object SharedPref {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun <T> getValue(key: String, default: T): T? {
+    fun <T> getValue(key: String, default: T): T {
         if (!::prefs.isInitialized) {
             Log.e(TAG, "Prefs chưa được khởi tạo!")
-            return null
+            return default
         }
 
         return when (default) {
-            is String -> prefs.getString(key, default)
-            is Int -> prefs.getInt(key, default)
-            is Boolean -> prefs.getBoolean(key, default)
-            is Float -> prefs.getFloat(key, default)
-            is Long -> prefs.getLong(key, default)
-            else -> {
-                Log.e(TAG, "Unsupported default type: ${default!!::class.simpleName}")
-                null
-            }
-        } as? T
+            is String  -> prefs.getString(key, default) as T
+            is Int     -> prefs.getInt(key, default)     as T
+            is Boolean -> prefs.getBoolean(key, default) as T
+            is Float   -> prefs.getFloat(key, default)   as T
+            is Long    -> prefs.getLong(key, default)    as T
+            else -> default
+        }
     }
 }

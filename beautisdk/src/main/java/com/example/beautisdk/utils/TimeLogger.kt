@@ -1,9 +1,10 @@
 package com.example.beautisdk.utils
 
 import android.util.Log
+import java.util.concurrent.ConcurrentHashMap
 
 object TimeLogger {
-    private val timeMap = mutableMapOf<String, Long>()
+    private val timeMap: MutableMap<String, Long> = ConcurrentHashMap()
 
     fun start(tag: String) {
         timeMap[tag] = System.currentTimeMillis()

@@ -18,5 +18,4 @@ class SplashActivity : VslSplashActivity() {
     @Composable
     override fun UpdateUI(modifier: Modifier) {
     }
-
 }

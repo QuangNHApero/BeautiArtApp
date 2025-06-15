@@ -40,9 +40,10 @@ import com.example.beautisdk.ui.design_system.LocalCustomTypography
 import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.utils.ImageHandlerUtil
-import com.example.beautisdk.utils.PermisionUtil
+import com.example.beautisdk.utils.PermissionUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class VslResultActivity : BaseActivity() {
@@ -68,7 +69,7 @@ class VslResultActivity : BaseActivity() {
         var message by remember { mutableStateOf(R.string.snackbar_error_network) }
         var isSuccess by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) {
-            _effect.collect { effect ->
+            _effect.collectLatest { effect ->
                 when (effect) {
                     is ResultUiEffect.ShowLoading -> {
                         showLoadingDialog = true
@@ -155,7 +156,7 @@ class VslResultActivity : BaseActivity() {
             CustomGradientButton(
                 isEnabled = uri != null,
                 onClick = {
-                    PermisionUtil.checkAndRequestWritePermission(
+                    PermissionUtil.checkAndRequestWritePermission(
                         context,
                         requestPermissionLauncher
                     )

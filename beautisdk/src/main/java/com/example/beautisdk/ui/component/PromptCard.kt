@@ -1,5 +1,6 @@
 package com.example.beautisdk.ui.component
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,7 +31,7 @@ fun PromptCard(
     text: String,
     onValueChange: (String) -> Unit = {},
     onClose: () -> Unit = {},
-    modifier: Modifier = Modifier,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
     colorBorder: Color = Color(0xFFE400D9),
 ) {
     Box(
@@ -53,13 +54,15 @@ fun PromptCard(
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f)
             )
-            
+
             Spacer(modifier = Modifier.width(20.pxToDp()))
 
             Image(
                 painter = painterResource(id = R.drawable.ic_remove),
                 contentDescription = "remove",
-                modifier = Modifier.clickable { onClose() }.size(20.pxToDp())
+                modifier = Modifier
+                    .size(20.pxToDp())
+                    .clickable { onClose() }
             )
         }
     }
@@ -76,7 +79,7 @@ fun PromptCard(
 @Composable
 fun PreviewPromptCard() {
     AppTheme {
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier.fillMaxSize()) {
             PromptCard(
                 modifier = Modifier.fillMaxWidth(),
                 text = "hello world",

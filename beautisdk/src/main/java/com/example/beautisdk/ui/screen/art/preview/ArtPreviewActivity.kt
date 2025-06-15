@@ -36,6 +36,7 @@ import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.result.VslResultActivity
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 
 class ArtPreviewActivity : BaseActivityPreview() {
     private val viewModel: ArtPreviewViewModel by viewModels()
@@ -60,7 +61,7 @@ class ArtPreviewActivity : BaseActivityPreview() {
         var showErrorSnackbar by remember { mutableStateOf(false) }
         var errorMessage by remember { mutableStateOf(R.string.snackbar_error_network) }
         LaunchedEffect(Unit) {
-            viewModel.effect.collect { effect ->
+            viewModel.effect.collectLatest { effect ->
                 when (effect) {
                     is GenerateArtUiEffect.ShowLoading -> {
                         // handle loading overlay

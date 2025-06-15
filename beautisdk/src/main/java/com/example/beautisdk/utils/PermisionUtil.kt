@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
 import com.example.beautisdk.utils.pref.SharedPref
 import com.example.beautisdk.utils.pref.SharedPrefConst.STORAGE_WRITE_PERMISSION_ATTEMPT
 
-object PermisionUtil {
+object PermissionUtil {
     const val STORAGE_PERMISSION = "android.permission.WRITE_EXTERNAL_STORAGE"
     private const val MAX_ATTEMPTS = 2
 

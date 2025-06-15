@@ -10,14 +10,27 @@
     <application>
         <activity
             android:name=".ui.screen.splash.VslSplashActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.ArtBeautify">
         </activity>
 
         <activity
             android:name=".ui.screen.art.preview.ArtPreviewActivity"
-            android:exported="true"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.ArtBeautify">
+        </activity>
+        <activity
+            android:name=".ui.screen.result.VslResultActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.ArtBeautify">
+        </activity>
+
+        <activity
+            android:name=".ui.screen.pick_photo.VslPickPhotoActivity"
+            android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.ArtBeautify">
         </activity>
