@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Art Beautify"
 include(":app")
- 
+include(":aperoaiservice")
+include(":beautisdk")
+include(":common")
