@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -11,20 +12,26 @@
             android:name=".ui.screen.art.preview.ArtPreviewActivity"
             android:exported="false"
             android:label="@string/app_name"
-            android:theme="@style/Theme.ArtBeautify">
+            android:theme="@style/Theme.ArtBeautify"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientation">
         </activity>
         <activity
             android:name=".ui.screen.result.VslResultActivity"
             android:exported="false"
             android:label="@string/app_name"
-            android:theme="@style/Theme.ArtBeautify">
+            android:theme="@style/Theme.ArtBeautify"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientation">
         </activity>
 
         <activity
             android:name=".ui.screen.pick_photo.VslPickPhotoActivity"
             android:exported="false"
             android:label="@string/app_name"
-            android:theme="@style/Theme.ArtBeautify">
+            android:theme="@style/Theme.ArtBeautify"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientation">
         </activity>
     </application>
 

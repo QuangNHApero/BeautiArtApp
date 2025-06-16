@@ -10,4 +10,5 @@
     <string name="txt_success_download">Download successfully</string>
     <string name="btn_download">Download Photo</string>
     <string name="txt_failed_download">Download Failed</string>
+    <string name="txt_pickphoto_empty">No photo in storage</string>
 </resources>

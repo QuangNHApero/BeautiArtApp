@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,13 +50,9 @@ class ArtPreviewActivity : BaseActivityPreview() {
         viewModel.updatePhotoUri(uri)
     }
 
-    private fun onGenerateSuccess() {
-        viewModel.uiState.photoUri?.let { VslResultActivity.start(this@ArtPreviewActivity, it) }
-    }
-
     @Composable
     override fun UpdateUI(modifier: Modifier) {
-        val uiState = viewModel.uiState
+        val uiState by viewModel.uiState.collectAsState()
 
         var showLoadingDialog by remember { mutableStateOf(false) }
         var showErrorSnackbar by remember { mutableStateOf(false) }
@@ -80,7 +77,7 @@ class ArtPreviewActivity : BaseActivityPreview() {
                     }
 
                     is GenerateArtUiEffect.Success -> {
-                        onGenerateSuccess()
+                        VslResultActivity.start(this@ArtPreviewActivity, effect.generatedPhoto)
                     }
                 }
             }
