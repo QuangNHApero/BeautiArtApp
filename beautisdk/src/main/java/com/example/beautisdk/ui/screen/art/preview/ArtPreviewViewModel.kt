@@ -1,21 +1,21 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beautisdk.R
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class ArtPreviewViewModel : ViewModel() {
-    var uiState by mutableStateOf(GenerateArtUiState())
-        private set
+    private val _uiState = MutableStateFlow(GenerateArtUiState())
+    val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
     private val _effect = MutableSharedFlow<GenerateArtUiEffect>()
     val effect: SharedFlow<GenerateArtUiEffect> = _effect.asSharedFlow()
@@ -23,15 +23,15 @@ class ArtPreviewViewModel : ViewModel() {
     fun onEvent(event: GenerateArtUiEvent) {
         when (event) {
             is GenerateArtUiEvent.OnPromptChanged -> {
-                uiState = uiState.copy(prompt = event.prompt)
+                _uiState.value = _uiState.value.copy(prompt = event.prompt)
                 validateGenerateButton()
             }
             is GenerateArtUiEvent.OnPhotoSelected -> {
-                uiState = uiState.copy(photoUri = event.uri)
+                _uiState.value = _uiState.value.copy(photoUri = event.uri)
                 validateGenerateButton()
             }
             is GenerateArtUiEvent.OnStyleSelected -> {
-                uiState = uiState.copy(selectedStyleId = event.styleId)
+                _uiState.value = _uiState.value.copy(selectedStyleId = event.styleId)
                 validateGenerateButton()
             }
             is GenerateArtUiEvent.OnGenerateClicked -> {
@@ -41,13 +41,13 @@ class ArtPreviewViewModel : ViewModel() {
     }
 
     private fun validateGenerateButton() {
-        uiState = uiState.copy(
-            isGenerateButtonEnabled = (!uiState.prompt.isBlank() || uiState.selectedStyleId != null) && uiState.photoUri != null
+        _uiState.value = _uiState.value.copy(
+            isGenerateButtonEnabled = (!_uiState.value.prompt.isBlank() || uiState.value.selectedStyleId != null) && uiState.value.photoUri != null
         )
     }
 
     fun updatePhotoUri(uri: Uri) {
-        uiState = uiState.copy(photoUri = uri)
+        _uiState.value = _uiState.value.copy(photoUri = uri)
         validateGenerateButton()
     }
 
@@ -63,7 +63,7 @@ class ArtPreviewViewModel : ViewModel() {
             if (!success) {
                 _effect.emit(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
             } else {
-                uiState = uiState.copy(photoUri = null)
+                _uiState.value = _uiState.value.copy(photoUri = null)
                 _effect.emit(GenerateArtUiEffect.Success)
             }
         }
