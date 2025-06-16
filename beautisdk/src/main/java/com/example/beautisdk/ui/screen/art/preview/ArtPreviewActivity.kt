@@ -50,10 +50,6 @@ class ArtPreviewActivity : BaseActivityPreview() {
         viewModel.updatePhotoUri(uri)
     }
 
-    private fun onGenerateSuccess() {
-        viewModel.uiState.value.photoUri?.let { VslResultActivity.start(this@ArtPreviewActivity, it) }
-    }
-
     @Composable
     override fun UpdateUI(modifier: Modifier) {
         val uiState by viewModel.uiState.collectAsState()
@@ -81,7 +77,7 @@ class ArtPreviewActivity : BaseActivityPreview() {
                     }
 
                     is GenerateArtUiEffect.Success -> {
-                        onGenerateSuccess()
+                        VslResultActivity.start(this@ArtPreviewActivity, effect.generatedPhoto)
                     }
                 }
             }

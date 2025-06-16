@@ -63,8 +63,9 @@ class ArtPreviewViewModel : ViewModel() {
             if (!success) {
                 _effect.emit(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
             } else {
-                _uiState.value = _uiState.value.copy(photoUri = null)
-                _effect.emit(GenerateArtUiEffect.Success)
+                val resultUri = Uri.parse("TODO: generate uri")
+                _uiState.value = _uiState.value.copy(photoUri = resultUri)
+                _effect.emit(GenerateArtUiEffect.Success(resultUri))
             }
         }
     }
@@ -81,7 +82,7 @@ sealed class GenerateArtUiEffect {
     object ShowLoading : GenerateArtUiEffect()
     object HideLoading : GenerateArtUiEffect()
     data class ShowError(val message: Int) : GenerateArtUiEffect()
-    object Success : GenerateArtUiEffect()
+    data class Success(val generatedPhoto: Uri) : GenerateArtUiEffect()
 }
 
 sealed class GenerateArtUiEvent {

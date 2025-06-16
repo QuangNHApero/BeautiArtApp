@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -28,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.LocalCustomTypography
@@ -44,7 +44,7 @@ class VslPickPhotoActivity : BaseActivity() {
 
     @Composable
     override fun UpdateUI(modifier: Modifier) {
-        val uiState by viewModel.uiState.collectAsState()
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
         MainContent(
             uiState = uiState,
