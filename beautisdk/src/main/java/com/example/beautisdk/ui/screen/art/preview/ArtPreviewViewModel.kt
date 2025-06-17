@@ -3,6 +3,7 @@ package com.example.beautisdk.ui.screen.art.preview
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.aperoaiservice.art.model.CategoryArt
 import com.example.beautisdk.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -75,7 +76,8 @@ data class GenerateArtUiState(
     val prompt: String = "",
     val photoUri: Uri? = null,
     val selectedStyleId: String? = null,
-    val isGenerateButtonEnabled: Boolean = false
+    val isGenerateButtonEnabled: Boolean = false,
+    val listCategoryArt: List<CategoryArt> = emptyList()
 )
 
 sealed class GenerateArtUiEffect {

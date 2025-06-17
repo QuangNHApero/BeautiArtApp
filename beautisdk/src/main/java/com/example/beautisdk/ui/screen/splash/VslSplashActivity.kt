@@ -31,6 +31,7 @@ abstract class VslSplashActivity : BaseActivity() {
                     toNextScreen()
                 }
             }.launchIn(lifecycleScope)
+
     }
 
 

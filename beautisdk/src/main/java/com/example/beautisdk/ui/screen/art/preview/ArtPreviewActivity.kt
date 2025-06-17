@@ -1,14 +1,17 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
+import android.os.Bundle
+import android.util.Log
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
@@ -24,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
+import com.example.aperoaiservice.art.repository.StyleRepository
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivityPreview
 import com.example.beautisdk.ui.component.CustomGradientButton
@@ -38,9 +43,25 @@ import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.result.VslResultActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class ArtPreviewActivity : BaseActivityPreview() {
     private val viewModel: ArtPreviewViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val apiUrl = "https://api-style-manager.apero.vn/category?project=techtrek&segmentValue=IN&styleType=imageToImage&isApp=true"
+
+        lifecycleScope.launch {
+            val result = StyleRepository.getStyleArts(apiUrl)
+            val top10 = result.flatMap { it.styles }.take(10)
+
+            top10.forEachIndexed { index, style ->
+                Log.d("STYLE_ART", "[$index] ${style.name} - ${style.thumbnail}")
+            }
+        }
+    }
 
     override fun onBackNavigation() {
         finish()
@@ -123,8 +144,7 @@ fun MainContent(
             top = 35.pxToDp(),
             bottom = 80.pxToDp(),
             start = 25.pxToDp()
-        ),
-        verticalArrangement = Arrangement.spacedBy(27.pxToDp())
+        )
     ) {
         PromptCard(
             text = state.prompt,
@@ -135,6 +155,7 @@ fun MainContent(
                 .padding(end = 25.pxToDp())
         )
 
+        Spacer(modifier = Modifier.height(29.pxToDp()))
 
         PreviewImageCard(
             imageUri = state.photoUri,
@@ -143,6 +164,23 @@ fun MainContent(
                 .padding(end = 25.pxToDp()),
             onClick = { onChoosePhoto() }
         )
+
+        Spacer(modifier = Modifier.height(29.pxToDp()))
+
+        AperoTextView(
+            text = stringResource(R.string.txt_choose_style),
+            textStyle = LocalCustomTypography.current.Title3.bold.copy(color = Color(0xFFE400D9)),
+            maxLines = 1,
+            marqueeEnabled = true,
+            textAlign = TextAlign.Start,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(5.pxToDp()))
+
+
+
+        Spacer(modifier = Modifier.height(30.pxToDp()))
 
         CustomGradientButton(
             isEnabled = state.isGenerateButtonEnabled,

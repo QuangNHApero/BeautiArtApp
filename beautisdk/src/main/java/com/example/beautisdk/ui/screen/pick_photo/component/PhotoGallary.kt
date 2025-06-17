@@ -18,8 +18,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,7 +76,7 @@ fun PhotoGallery(
             horizontalArrangement = Arrangement.spacedBy(10.pxToDp())
         ) {
             items(items = photoList, key = { it.id }) { item ->
-                val isSelected = item.id == selectedPhotoId
+                val isSelected by rememberUpdatedState(item.id == selectedPhotoId)
                 PhotoItem(
                     photoUri = item.uri,
                     isSelected = isSelected,
@@ -89,14 +88,11 @@ fun PhotoGallery(
 }
 
 @Composable
-fun PhotoItem(photoUri: Uri, onPhotoClick: (Uri) -> Unit, isSelected: Boolean = false) {
-    val overlayIcon by remember(isSelected) {
-        mutableStateOf(
-            if (isSelected) R.drawable.ic_pickphoto_selected
-            else R.drawable.ic_pickphoto_unselected
-        )
-    }
-
+fun PhotoItem(
+    photoUri: Uri,
+    isSelected: Boolean = false,
+    onPhotoClick: (Uri) -> Unit,
+) {
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
             .data(photoUri)
@@ -105,21 +101,24 @@ fun PhotoItem(photoUri: Uri, onPhotoClick: (Uri) -> Unit, isSelected: Boolean = 
             .build()
     )
 
+    val overlayIcon = if (isSelected) {
+        R.drawable.ic_pickphoto_selected
+    } else {
+        R.drawable.ic_pickphoto_unselected
+    }
 
     Box(
         modifier = Modifier
             .size(130.pxToDp())
             .clip(RoundedCornerShape(10.pxToDp()))
-            .clickable { onPhotoClick(photoUri)}
+            .clickable { onPhotoClick(photoUri) }
     ) {
         Image(
             painter = painter,
             contentDescription = "Photo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize(),
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxSize()
         )
-
 
         Image(
             painter = painterResource(id = overlayIcon),
