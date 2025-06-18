@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal object VslImageHandlerUtil {
     private const val TAG = "ImageHandlerUtil"
     private val _cachedPhotos = mutableListOf<PhotoItem>()
+    private val _cachedIds = mutableSetOf<Long>()
     val cachedPhotos: List<PhotoItem> get() = _cachedPhotos
     private val isLoadFullImage = AtomicBoolean(false)
 
@@ -177,13 +178,22 @@ internal object VslImageHandlerUtil {
         }
     }
 
-    fun setPhotos(photos: List<PhotoItem>) {
-        _cachedPhotos.clear()
-        _cachedPhotos.addAll(photos)
-    }
+    suspend fun checkShouldRefreshPhotos(context: Context) = withContext(Dispatchers.IO) {
+        val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Images.Media._ID)
 
-    fun clear() {
-        _cachedPhotos.clear()
+        val latestId =
+            context.contentResolver.query(
+                collection, projection, null, null, "${MediaStore.Images.Media.DATE_ADDED} DESC"
+            )?.use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else null }
+
+        latestId?.let {
+            val cachedFirstId = _cachedPhotos.firstOrNull()?.id
+            if (cachedFirstId != null && latestId != cachedFirstId) {
+                _cachedPhotos.clear()
+                isLoadFullImage.set(false)
+            }
+        }
     }
 
     suspend fun queryPhotoChunkManualIo(
@@ -194,6 +204,7 @@ internal object VslImageHandlerUtil {
         preloadHeight: Int
     ): List<PhotoItem> = withContext(Dispatchers.IO) {
         if (isLoadFullImage.get()) return@withContext emptyList()
+
         val result = mutableListOf<PhotoItem>()
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media._ID)
@@ -208,24 +219,31 @@ internal object VslImageHandlerUtil {
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
 
-            var currentIndex = 0
-            var fetchedCount = 0
+            val hasData = if (offset > 0) cursor.move(offset) else cursor.moveToFirst()
+            if (!hasData) return@use
 
-            while (cursor.moveToNext()) {
-                if (currentIndex++ < offset) continue
+            var fetchedCount = 0
+            do {
                 if (fetchedCount >= limit) break
 
                 val id = cursor.getLong(idColumn)
+                if (_cachedIds.contains(id)) continue
+
                 val uri = ContentUris.withAppendedId(collection, id)
-                result.add(PhotoItem(id, uri))
-                if (_cachedPhotos.none { it.id == id }) {
-                    _cachedPhotos.add(PhotoItem(id, uri))
-                }
+                val item = PhotoItem(id, uri)
+
+                result.add(item)
+                _cachedPhotos.add(item)
+                _cachedIds.add(id)
+
                 preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+
                 fetchedCount++
-            }
+            } while (cursor.moveToNext())
         }
+
         if (result.isEmpty()) isLoadFullImage.set(true)
+
         return@withContext result
     }
 }

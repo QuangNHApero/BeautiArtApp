@@ -3,11 +3,15 @@ package com.example.beautisdk.base
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import com.example.beautisdk.ui.screen.pick_photo.VslPickPhotoActivity
 import com.example.beautisdk.utils.PermissionUtil
+import com.example.beautisdk.utils.VslImageHandlerUtil
+import kotlinx.coroutines.launch
 
 internal abstract class BaseActivityPreview : BaseActivity() {
     private lateinit var pickPhotoLauncher: ActivityResultLauncher<Intent>
@@ -45,7 +49,11 @@ internal abstract class BaseActivityPreview : BaseActivity() {
             context = this,
             launcher = requestReadExternalStoragePermissionLauncher,
             onGranted = {
-                launchCustomPickPhoto()
+                lifecycleScope.launch {
+                    Log.d("quangnh","checkAndLaunchPickPhoto ${VslImageHandlerUtil.cachedPhotos.size}")
+                    VslImageHandlerUtil.checkShouldRefreshPhotos(this@BaseActivityPreview)
+                    launchCustomPickPhoto()
+                }
             }
         )
     }
