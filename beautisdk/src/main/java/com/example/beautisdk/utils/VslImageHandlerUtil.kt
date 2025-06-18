@@ -28,7 +28,7 @@ internal object VslImageHandlerUtil {
     /**
      * Preload một ảnh từ URL vào bộ nhớ đệm.
      * @param context Context ứng dụng hoặc activity.
-     * @param url URL ảnh cần preload.
+     * @param uri URI ảnh cần preload.
      * @param cacheKey Tùy chọn: key để gán cache rõ ràng.
      */
     suspend fun preload(
@@ -182,24 +182,23 @@ internal object VslImageHandlerUtil {
             val hasData = if (offset > 0) cursor.move(offset) else cursor.moveToFirst()
             if (!hasData) return@use
 
-            var fetchedCount = 0
-            do {
-                if (fetchedCount >= limit) break
+            if (cursor.moveToPosition(offset)) {
+                var fetchedCount = 0
+                do {
+                    if (fetchedCount >= limit) break
 
-                val id = cursor.getLong(idColumn)
-                if (_cachedIds.contains(id)) continue
+                    val id = cursor.getLong(idColumn)
+                    val uri = ContentUris.withAppendedId(collection, id)
+                    result.add(PhotoItem(id, uri))
 
-                val uri = ContentUris.withAppendedId(collection, id)
-                val item = PhotoItem(id, uri)
+                    if (_cachedPhotos.none { it.id == id }) {
+                        _cachedPhotos.add(PhotoItem(id, uri))
+                    }
 
-                result.add(item)
-                _cachedPhotos.add(item)
-                _cachedIds.add(id)
-
-                preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
-
-                fetchedCount++
-            } while (cursor.moveToNext())
+                    preload(context = context, uri = uri, widthPx =  preloadWidth, heightPx = preloadHeight)
+                    fetchedCount++
+                } while (cursor.moveToNext())
+            }
         }
 
         if (result.isEmpty()) isLoadFullImage.set(true)
