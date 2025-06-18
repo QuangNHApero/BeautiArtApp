@@ -1,8 +1,6 @@
 package com.example.beautisdk.ui.screen.splash
 
 import android.annotation.SuppressLint
-import android.net.Uri
-import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,11 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -33,9 +28,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.pxToDp
-import com.example.beautisdk.utils.VslImageHandlerUtil
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import com.example.beautisdk.utils.PermissionUtil
 
 @SuppressLint("CustomSplashScreen")
 abstract class VslSplashActivity : BaseActivity() {
@@ -44,31 +37,25 @@ abstract class VslSplashActivity : BaseActivity() {
         finish()
     }
 
-    final override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel.isLoading
-            .onEach { isLoading ->
-                if (!isLoading) {
-                    toNextScreen()
-                }
-            }.launchIn(lifecycleScope)
-    }
-
 
     @Composable
     override fun UpdateUI(modifier: Modifier) {
-        val density = LocalDensity.current
-        val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
-        val targetSize = (screenWidthPx - 50).toInt()
+        val context = LocalContext.current
 
         LaunchedEffect(Unit) {
-            VslImageHandlerUtil.preload(
-                context = this@VslSplashActivity,
-                uri = Uri.parse("https://dev-static.apero.vn/video-editor-pro/ai-style-thumbnail/1701939921-M878.png"),
-                widthPx = targetSize,
-                heightPx = targetSize
-            )
-            viewModel.setLoading(false)
+            viewModel.effect.collect {
+                when (it) {
+                    is VslSplashEffect.NavigateToNextActivity -> {
+                        toNextScreen()
+                    }
+                }
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            if (PermissionUtil.hasReadExternalPermission(context)) {
+                viewModel.preloadPhotos(context)
+            }
         }
         MainContent(modifier)
     }
@@ -87,7 +74,9 @@ abstract class VslSplashActivity : BaseActivity() {
         )
 
         Column(
-            modifier = modifier.fillMaxSize().background(backgroundColor),
+            modifier = modifier
+                .fillMaxSize()
+                .background(backgroundColor),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

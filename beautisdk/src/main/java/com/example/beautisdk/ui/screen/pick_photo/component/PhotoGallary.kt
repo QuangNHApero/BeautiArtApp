@@ -23,7 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.beautisdk.R
 import com.example.beautisdk.ui.component.EmptyContent
@@ -58,7 +58,6 @@ fun PhotoGallery(
             items = photoList,
             key = { it.id }
         ) { item ->
-
             PhotoItem(
                 photoId = item.id,
                 photoUri = item.uri,
@@ -78,33 +77,28 @@ fun PhotoItem(
     onPhotoClick: (Int) -> Unit,
     iconResId: Int,
 ) {
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(photoUri)
-            .placeholder(R.drawable.ic_photo)
-            .crossfade(true)
-            .build()
-    )
-
-
     Box(
         modifier = Modifier
             .size(130.pxToDp())
             .clip(RoundedCornerShape(10.pxToDp()))
             .clickable { onPhotoClick(photoId) }
     ) {
-        Image(
-            painter = painter,
-            contentDescription = "Photo",
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(photoUri)
+                .placeholder(R.drawable.ic_photo)
+                .crossfade(true)
+                .build(),
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
         )
 
 
         Image(
             painter = painterResource(id = iconResId),
-            contentDescription = "Select state",
+            contentDescription = null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(8.pxToDp())
