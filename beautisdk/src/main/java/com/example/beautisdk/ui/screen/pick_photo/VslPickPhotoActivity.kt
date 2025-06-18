@@ -36,7 +36,7 @@ import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.pick_photo.component.PhotoGallery
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 
-class VslPickPhotoActivity : BaseActivity() {
+internal class VslPickPhotoActivity : BaseActivity() {
     private val viewModel: VslPickPhotoViewModel by viewModels()
     override fun onBackNavigation() {
         finish()
@@ -102,7 +102,7 @@ class VslPickPhotoActivity : BaseActivity() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_close),
+                painter = painterResource(id = config.closeBtnResId),
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(28.pxToDp())

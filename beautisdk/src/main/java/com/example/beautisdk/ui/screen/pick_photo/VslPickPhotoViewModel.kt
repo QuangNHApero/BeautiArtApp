@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class VslPickPhotoViewModel : ViewModel() {
+internal class VslPickPhotoViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(VslPickPhotoUiState())
     val uiState: StateFlow<VslPickPhotoUiState> = _uiState.asStateFlow()
 
@@ -18,7 +18,7 @@ class VslPickPhotoViewModel : ViewModel() {
     }
 }
 
-data class VslPickPhotoUiState(
+internal data class VslPickPhotoUiState(
     val photos: List<PhotoItem>? = fakePhotos,
     val selectedPhoto: PhotoItem? = null
 )

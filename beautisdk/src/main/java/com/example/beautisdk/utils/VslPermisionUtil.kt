@@ -9,10 +9,10 @@ import android.os.Build
 import android.provider.Settings
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
-import com.example.beautisdk.utils.pref.SharedPref
-import com.example.beautisdk.utils.pref.SharedPrefConst.STORAGE_WRITE_PERMISSION_ATTEMPT
+import com.example.beautisdk.utils.pref.VslSharedPref
+import com.example.beautisdk.utils.pref.VslSharedPrefConst.STORAGE_WRITE_PERMISSION_ATTEMPT
 
-object PermissionUtil {
+internal object PermissionUtil {
     const val STORAGE_PERMISSION = "android.permission.WRITE_EXTERNAL_STORAGE"
     private const val MAX_ATTEMPTS = 2
 
@@ -35,11 +35,11 @@ object PermissionUtil {
     ) {
         if (shouldRequestWritePermission()) {
             if (!hasWritePermission(context)) {
-                val permissionAttempt = SharedPref.getValue(STORAGE_WRITE_PERMISSION_ATTEMPT, 0) ?: 0
+                val permissionAttempt = VslSharedPref.getValue(STORAGE_WRITE_PERMISSION_ATTEMPT, 0) ?: 0
                 if (permissionAttempt >= MAX_ATTEMPTS) {
                     openAppSettings(context)
                 } else {
-                    SharedPref.putValue(STORAGE_WRITE_PERMISSION_ATTEMPT, permissionAttempt + 1)
+                    VslSharedPref.putValue(STORAGE_WRITE_PERMISSION_ATTEMPT, permissionAttempt + 1)
                     launcher.launch(STORAGE_PERMISSION)
                 }
             }

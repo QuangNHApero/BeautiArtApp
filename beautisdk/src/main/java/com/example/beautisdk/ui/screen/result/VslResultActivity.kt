@@ -39,14 +39,14 @@ import com.example.beautisdk.ui.component.PreviewImageCard
 import com.example.beautisdk.ui.design_system.LocalCustomTypography
 import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
-import com.example.beautisdk.utils.ImageHandlerUtil
+import com.example.beautisdk.utils.VslImageHandlerUtil
 import com.example.beautisdk.utils.PermissionUtil
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class VslResultActivity : BaseActivity() {
+internal class VslResultActivity : BaseActivity() {
     private val _effect = MutableSharedFlow<ResultUiEffect>()
 
     private val uri: Uri? by lazy { intent.data }
@@ -100,14 +100,16 @@ class VslResultActivity : BaseActivity() {
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = modifier.fillMaxSize()) {
             MainContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(WindowInsets.systemBars.asPaddingValues())
             )
             if (showLoadingDialog) {
-                LoadingDialog()
+                LoadingDialog(
+                    loadingResId = config.uiConfig.loadingRawId
+                )
             }
             if (showSnackbar) {
                 CustomSnackbar(
@@ -137,7 +139,7 @@ class VslResultActivity : BaseActivity() {
             verticalArrangement = Arrangement.spacedBy(150.pxToDp()),
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_back),
+                painter = painterResource(id = config.backBtnResId),
                 contentDescription = "ic_back",
                 modifier = Modifier
                     .clickable { onBackNavigation() }
@@ -181,7 +183,7 @@ class VslResultActivity : BaseActivity() {
             lifecycleScope.launch {
                 _effect.emit(ResultUiEffect.ShowLoading)
 
-                ImageHandlerUtil.saveImageToExternal(
+                VslImageHandlerUtil.saveImageToExternal(
                     context = this@VslResultActivity,
                     uri = imageUri,
                     onSuccess = {
@@ -205,7 +207,7 @@ class VslResultActivity : BaseActivity() {
     }
 }
 
-sealed class ResultUiEffect {
+internal sealed class ResultUiEffect {
     object ShowLoading : ResultUiEffect()
     data class ShowSuccess(val message: Int) : ResultUiEffect()
     data class ShowError(val message: Int) : ResultUiEffect()

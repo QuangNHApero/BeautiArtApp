@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class VslSplashViewModel : ViewModel(){
+internal class VslSplashViewModel : ViewModel(){
     private var _isLoading : MutableStateFlow<Boolean> = MutableStateFlow(true)
     val isLoading : StateFlow<Boolean> = _isLoading.asStateFlow()
 

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ArtPreviewViewModel : ViewModel() {
+internal class VslArtPreviewViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(GenerateArtUiState())
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
@@ -71,21 +71,21 @@ class ArtPreviewViewModel : ViewModel() {
     }
 }
 
-data class GenerateArtUiState(
+internal data class GenerateArtUiState(
     val prompt: String = "",
     val photoUri: Uri? = null,
     val selectedStyleId: String? = null,
     val isGenerateButtonEnabled: Boolean = false
 )
 
-sealed class GenerateArtUiEffect {
+internal sealed class GenerateArtUiEffect {
     object ShowLoading : GenerateArtUiEffect()
     object HideLoading : GenerateArtUiEffect()
     data class ShowError(val message: Int) : GenerateArtUiEffect()
     data class Success(val generatedPhoto: Uri) : GenerateArtUiEffect()
 }
 
-sealed class GenerateArtUiEvent {
+internal sealed class GenerateArtUiEvent {
     data class OnPromptChanged(val prompt: String) : GenerateArtUiEvent()
     data class OnPhotoSelected(val uri: Uri) : GenerateArtUiEvent()
     data class OnStyleSelected(val styleId: String) : GenerateArtUiEvent()

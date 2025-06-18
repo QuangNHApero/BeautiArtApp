@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-object ImageHandlerUtil {
+internal object VslImageHandlerUtil {
     private const val TAG = "ImageHandlerUtil"
     /**
      * Preload một ảnh từ URL vào bộ nhớ đệm.

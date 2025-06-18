@@ -39,8 +39,8 @@ import com.example.beautisdk.ui.screen.result.VslResultActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
-class ArtPreviewActivity : BaseActivityPreview() {
-    private val viewModel: ArtPreviewViewModel by viewModels()
+internal class VslArtPreviewActivity : BaseActivityPreview() {
+    private val viewModel: VslArtPreviewViewModel by viewModels()
 
     override fun onBackNavigation() {
         finish()
@@ -77,7 +77,7 @@ class ArtPreviewActivity : BaseActivityPreview() {
                     }
 
                     is GenerateArtUiEffect.Success -> {
-                        VslResultActivity.start(this@ArtPreviewActivity, effect.generatedPhoto)
+                        VslResultActivity.start(this@VslArtPreviewActivity, effect.generatedPhoto)
                     }
                 }
             }
@@ -112,7 +112,7 @@ class ArtPreviewActivity : BaseActivityPreview() {
 }
 
 @Composable
-fun MainContent(
+internal fun MainContent(
     state: GenerateArtUiState,
     onEvent: (GenerateArtUiEvent) -> Unit,
     onChoosePhoto: () -> Unit,

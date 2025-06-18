@@ -3,7 +3,7 @@ package com.example.beautisdk.utils
 import android.util.Log
 import java.util.concurrent.ConcurrentHashMap
 
-object TimeLogger {
+internal object VslTimeLogger {
     private val timeMap: MutableMap<String, Long> = ConcurrentHashMap()
 
     fun start(tag: String) {

@@ -1,11 +1,15 @@
 package com.example.artbeautify
 
 import android.app.Application
-import com.example.beautisdk.utils.pref.SharedPref
+import com.example.artbeautify.utils.initialize.BeautiServiceConfig
+import com.example.beautisdk.VslBeautiEntry
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        SharedPref.initialize(this)
+        VslBeautiEntry.init(
+            context =this, common = {
+            appName = "ArtBeautify"
+        }, BeautiServiceConfig())
     }
 }

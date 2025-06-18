@@ -7,7 +7,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.beautisdk.ui.screen.pick_photo.VslPickPhotoActivity
 
-abstract class BaseActivityPreview : BaseActivity() {
+internal abstract class BaseActivityPreview : BaseActivity() {
     private lateinit var pickPhotoLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
