@@ -5,6 +5,6 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class PhotoItem(
-    val id: Int,
+    val id: Long,
     val uri: Uri
 )

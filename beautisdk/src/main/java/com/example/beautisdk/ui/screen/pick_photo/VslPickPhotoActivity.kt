@@ -22,9 +22,11 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +36,7 @@ import com.example.beautisdk.ui.design_system.LocalCustomTypography
 import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.pick_photo.component.PhotoGallery
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 internal class VslPickPhotoActivity : BaseActivity() {
     private val viewModel: VslPickPhotoViewModel by viewModels()
@@ -73,7 +76,20 @@ internal class VslPickPhotoActivity : BaseActivity() {
         onEvent: (VslPickPhotoEvent) -> Unit,
         @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
     ) {
+        val context = LocalContext.current
         val gridState = rememberLazyGridState()
+
+        LaunchedEffect(gridState) {
+            snapshotFlow { gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+                .distinctUntilChanged()
+                .collect { lastVisibleIndex ->
+                    val totalItems = gridState.layoutInfo.totalItemsCount
+                    if (lastVisibleIndex != null && lastVisibleIndex >= totalItems - 15 && totalItems > 0) {
+                        viewModel.loadMorePhotos(context)
+                    }
+                }
+        }
+
 
         Column(
             modifier = modifier

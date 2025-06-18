@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,7 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.beautisdk.R
 import com.example.beautisdk.ui.component.EmptyContent
@@ -33,7 +34,7 @@ import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 @Composable
 fun PhotoGallery(
     photoList: List<PhotoItem>?,
-    selectedPhotoId: Int?,
+    selectedPhotoId: Long?,
     selectedResId: Int,
     unselectedResId: Int,
     onPhotoClick: (PhotoItem) -> Unit,
@@ -58,7 +59,6 @@ fun PhotoGallery(
             items = photoList,
             key = { it.id }
         ) { item ->
-
             PhotoItem(
                 photoId = item.id,
                 photoUri = item.uri,
@@ -70,41 +70,40 @@ fun PhotoGallery(
 }
 
 
-
 @Composable
 fun PhotoItem(
-    photoId: Int,
+    photoId: Long,
     photoUri: Uri,
-    onPhotoClick: (Int) -> Unit,
+    onPhotoClick: (Long) -> Unit,
     iconResId: Int,
 ) {
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
+    val context = LocalContext.current
+
+    val request = remember(photoUri) {
+        ImageRequest.Builder(context)
             .data(photoUri)
             .placeholder(R.drawable.ic_photo)
             .crossfade(true)
             .build()
-    )
-
-
+    }
     Box(
         modifier = Modifier
             .size(130.pxToDp())
             .clip(RoundedCornerShape(10.pxToDp()))
             .clickable { onPhotoClick(photoId) }
     ) {
-        Image(
-            painter = painter,
-            contentDescription = "Photo",
+        AsyncImage(
+            model = request,
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
         )
 
 
         Image(
             painter = painterResource(id = iconResId),
-            contentDescription = "Select state",
+            contentDescription = null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(8.pxToDp())
@@ -112,7 +111,6 @@ fun PhotoItem(
         )
     }
 }
-
 
 
 @Preview(showBackground = true)
@@ -134,7 +132,7 @@ fun PreviewPhotoGalleryEmpty() {
 fun PreviewPhotoGallery() {
     val fakePhotos = List(12) { index ->
         PhotoItem(
-            id = index,
+            id = index.toLong(),
             uri = Uri.parse("https://via.placeholder.com/150?text=Photo+$index")
         )
     }

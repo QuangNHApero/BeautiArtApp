@@ -1,5 +1,6 @@
 package com.example.beautisdk.utils
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -10,15 +11,21 @@ import android.util.Log
 import coil.ImageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal object VslImageHandlerUtil {
     private const val TAG = "ImageHandlerUtil"
+    private val _cachedPhotos = mutableListOf<PhotoItem>()
+    val cachedPhotos: List<PhotoItem> get() = _cachedPhotos
+    private val isLoadFullImage = AtomicBoolean(false)
+
     /**
      * Preload một ảnh từ URL vào bộ nhớ đệm.
      * @param context Context ứng dụng hoặc activity.
@@ -96,7 +103,8 @@ internal object VslImageHandlerUtil {
                         put(MediaStore.Images.Media.IS_PENDING, 1)
                     }
 
-                    val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                    val collection =
+                        MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                     val imageUri = resolver.insert(collection, contentValues)
 
                     if (imageUri == null) {
@@ -167,5 +175,57 @@ internal object VslImageHandlerUtil {
                 }
             }
         }
+    }
+
+    fun setPhotos(photos: List<PhotoItem>) {
+        _cachedPhotos.clear()
+        _cachedPhotos.addAll(photos)
+    }
+
+    fun clear() {
+        _cachedPhotos.clear()
+    }
+
+    suspend fun queryPhotoChunkManualIo(
+        context: Context,
+        offset: Int,
+        limit: Int,
+        preloadWidth: Int,
+        preloadHeight: Int
+    ): List<PhotoItem> = withContext(Dispatchers.IO) {
+        if (isLoadFullImage.get()) return@withContext emptyList()
+        val result = mutableListOf<PhotoItem>()
+        val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Images.Media._ID)
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+        context.contentResolver.query(
+            collection,
+            projection,
+            null,
+            null,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+
+            var currentIndex = 0
+            var fetchedCount = 0
+
+            while (cursor.moveToNext()) {
+                if (currentIndex++ < offset) continue
+                if (fetchedCount >= limit) break
+
+                val id = cursor.getLong(idColumn)
+                val uri = ContentUris.withAppendedId(collection, id)
+                result.add(PhotoItem(id, uri))
+                if (_cachedPhotos.none { it.id == id }) {
+                    _cachedPhotos.add(PhotoItem(id, uri))
+                }
+                preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+                fetchedCount++
+            }
+        }
+        if (result.isEmpty()) isLoadFullImage.set(true)
+        return@withContext result
     }
 }

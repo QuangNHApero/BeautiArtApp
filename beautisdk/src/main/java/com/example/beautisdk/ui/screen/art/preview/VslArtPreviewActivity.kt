@@ -1,7 +1,6 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
-import android.util.Log
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -82,7 +81,6 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
                     }
 
                     is GenerateArtUiEffect.NavigationPhotoPicker -> {
-                        Log.d("quangnh","launcher")
                         checkAndLaunchPickPhoto()
                     }
                 }
