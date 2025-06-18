@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,7 +34,6 @@ import com.example.beautisdk.ui.design_system.LocalCustomTypography
 import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.pick_photo.component.PhotoGallery
-import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 
 internal class VslPickPhotoActivity : BaseActivity() {
     private val viewModel: VslPickPhotoViewModel by viewModels()
@@ -46,53 +45,62 @@ internal class VslPickPhotoActivity : BaseActivity() {
     override fun UpdateUI(modifier: Modifier) {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+        LaunchedEffect(Unit) {
+            viewModel.effect.collect { effect ->
+                when (effect) {
+                    is VslPickPhotoUiEffect.BackNavigation -> {
+                        onBackNavigation()
+                    }
+                    is VslPickPhotoUiEffect.NextNavigation -> {
+                        uiState.selectedPhoto?.let { onPhotoApply(it.uri) }
+                    }
+                }
+            }
+        }
+
         MainContent(
             uiState = uiState,
-            onBackClick = { onBackNavigation() },
-            onNextClick = { uiState.selectedPhoto?.let { onPhotoApply(it.uri) } },
-            onPhotoClick = { viewModel.onPhotoSelected(it) },
+            onEvent = viewModel::onEvent,
             modifier = modifier
                 .fillMaxSize()
                 .padding(WindowInsets.systemBars.asPaddingValues())
         )
-
     }
 
     @Composable
     fun MainContent(
         uiState: VslPickPhotoUiState,
-        onBackClick: () -> Unit = {},
-        onNextClick: () -> Unit = {},
-        onPhotoClick: (PhotoItem) -> Unit = {},
+        onEvent: (VslPickPhotoEvent) -> Unit,
         @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
     ) {
-        val isSelected by remember(uiState.selectedPhoto) {
-            derivedStateOf { uiState.selectedPhoto != null }
-        }
+        val gridState = rememberLazyGridState()
+
         Column(
             modifier = modifier
                 .padding(horizontal = 22.pxToDp())
         ) {
             Spacer(modifier = Modifier.height(16.pxToDp()))
 
-            HeaderBar(isSelected, onBackClick, onNextClick, modifier = Modifier.fillMaxWidth())
+            HeaderBar(uiState, onEvent, modifier = Modifier.fillMaxWidth())
 
             Spacer(modifier = Modifier.height(36.pxToDp()))
 
             PhotoGallery(
                 photoList = uiState.photos,
                 selectedPhotoId = uiState.selectedPhoto?.id,
-                onPhotoClick = { onPhotoClick(it) },
-                modifier = Modifier.weight(1f)
+                onPhotoClick = { photo -> onEvent(VslPickPhotoEvent.OnPhotoSelected(photo)) },
+                modifier = Modifier.weight(1f),
+                selectedResId = config.selectedBtn,
+                unselectedResId = config.unSelectedBtn,
+                gridState = gridState,
             )
         }
     }
 
     @Composable
     fun HeaderBar(
-        isSelected: Boolean,
-        onBackClick: () -> Unit,
-        onNextClick: () -> Unit,
+        uiState: VslPickPhotoUiState,
+        onEvent: (VslPickPhotoEvent) -> Unit,
         modifier: Modifier = Modifier
     ) {
         Row(
@@ -106,18 +114,18 @@ internal class VslPickPhotoActivity : BaseActivity() {
                 contentDescription = "Back",
                 modifier = Modifier
                     .size(28.pxToDp())
-                    .clickable { onBackClick() }
+                    .clickable { onEvent(VslPickPhotoEvent.OnBackClicked) }
             )
 
 
             AperoTextView(
                 text = getString(R.string.btn_next),
                 textStyle = LocalCustomTypography.current.Title3.bold.copy(
-                    color = if (isSelected) Color(0xFF131318) else Color(0x80131318)
+                    color = if (uiState.isNextEnabled) Color(0xFF131318) else Color(0x80131318)
                 ),
                 textAlign = TextAlign.End,
                 modifier = Modifier
-                    .clickable(enabled = isSelected) { onNextClick() }
+                    .clickable(enabled = uiState.isNextEnabled) { onEvent(VslPickPhotoEvent.OnNextClicked) }
             )
         }
     }

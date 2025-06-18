@@ -1,41 +1,50 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beautisdk.R
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 internal class VslArtPreviewViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(GenerateArtUiState())
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
-    private val _effect = MutableSharedFlow<GenerateArtUiEffect>()
-    val effect: SharedFlow<GenerateArtUiEffect> = _effect.asSharedFlow()
+    private val _effect = Channel<GenerateArtUiEffect>()
+    val effect = _effect.receiveAsFlow()
 
     fun onEvent(event: GenerateArtUiEvent) {
-        when (event) {
-            is GenerateArtUiEvent.OnPromptChanged -> {
-                _uiState.value = _uiState.value.copy(prompt = event.prompt)
-                validateGenerateButton()
-            }
-            is GenerateArtUiEvent.OnPhotoSelected -> {
-                _uiState.value = _uiState.value.copy(photoUri = event.uri)
-                validateGenerateButton()
-            }
-            is GenerateArtUiEvent.OnStyleSelected -> {
-                _uiState.value = _uiState.value.copy(selectedStyleId = event.styleId)
-                validateGenerateButton()
-            }
-            is GenerateArtUiEvent.OnGenerateClicked -> {
-                generateImage()
+        viewModelScope.launch {
+            when (event) {
+                is GenerateArtUiEvent.OnPromptChanged -> {
+                    _uiState.value = _uiState.value.copy(prompt = event.prompt)
+                    validateGenerateButton()
+                }
+
+                is GenerateArtUiEvent.OnPhotoSelected -> {
+                    _uiState.value = _uiState.value.copy(photoUri = event.uri)
+                    validateGenerateButton()
+                }
+
+                is GenerateArtUiEvent.OnStyleSelected -> {
+                    _uiState.value = _uiState.value.copy(selectedStyleId = event.styleId)
+                    validateGenerateButton()
+                }
+
+                is GenerateArtUiEvent.OnGenerateClicked -> {
+                    generateImage()
+                }
+
+                is GenerateArtUiEvent.OnChoosePhotoClicked -> {
+                    _effect.send(GenerateArtUiEffect.NavigationPhotoPicker)
+                }
             }
         }
     }
@@ -53,19 +62,19 @@ internal class VslArtPreviewViewModel : ViewModel() {
 
     private fun generateImage() {
         viewModelScope.launch {
-            _effect.emit(GenerateArtUiEffect.ShowLoading)
+            _effect.send(GenerateArtUiEffect.ShowLoading)
 
             delay(2000) // giả lập network
 
             val success = (0..1).random() == 1
 
-            _effect.emit(GenerateArtUiEffect.HideLoading)
+            _effect.send(GenerateArtUiEffect.HideLoading)
             if (!success) {
-                _effect.emit(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
             } else {
                 val resultUri = Uri.parse("TODO: generate uri")
                 _uiState.value = _uiState.value.copy(photoUri = resultUri)
-                _effect.emit(GenerateArtUiEffect.Success(resultUri))
+                _effect.send(GenerateArtUiEffect.Success(resultUri))
             }
         }
     }
@@ -81,6 +90,7 @@ internal data class GenerateArtUiState(
 internal sealed class GenerateArtUiEffect {
     object ShowLoading : GenerateArtUiEffect()
     object HideLoading : GenerateArtUiEffect()
+    object NavigationPhotoPicker : GenerateArtUiEffect()
     data class ShowError(val message: Int) : GenerateArtUiEffect()
     data class Success(val generatedPhoto: Uri) : GenerateArtUiEffect()
 }
@@ -90,4 +100,5 @@ internal sealed class GenerateArtUiEvent {
     data class OnPhotoSelected(val uri: Uri) : GenerateArtUiEvent()
     data class OnStyleSelected(val styleId: String) : GenerateArtUiEvent()
     object OnGenerateClicked : GenerateArtUiEvent()
+    object OnChoosePhotoClicked : GenerateArtUiEvent()
 }

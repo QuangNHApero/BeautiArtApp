@@ -37,6 +37,7 @@ import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.result.VslResultActivity
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 
 internal class VslArtPreviewActivity : BaseActivityPreview() {
@@ -58,10 +59,9 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
         var showErrorSnackbar by remember { mutableStateOf(false) }
         var errorMessage by remember { mutableStateOf(R.string.snackbar_error_network) }
         LaunchedEffect(Unit) {
-            viewModel.effect.collectLatest { effect ->
+            viewModel.effect.collect { effect ->
                 when (effect) {
                     is GenerateArtUiEffect.ShowLoading -> {
-                        // handle loading overlay
                         showLoadingDialog = true
                     }
 
@@ -79,6 +79,10 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
                     is GenerateArtUiEffect.Success -> {
                         VslResultActivity.start(this@VslArtPreviewActivity, effect.generatedPhoto)
                     }
+
+                    is GenerateArtUiEffect.NavigationPhotoPicker -> {
+                        launchCustomPickPhoto()
+                    }
                 }
             }
         }
@@ -91,7 +95,6 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
             MainContent(
                 state = uiState,
                 onEvent = viewModel::onEvent,
-                onChoosePhoto = { launchCustomPickPhoto() },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(WindowInsets.systemBars.asPaddingValues())
@@ -115,7 +118,6 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
 internal fun MainContent(
     state: GenerateArtUiState,
     onEvent: (GenerateArtUiEvent) -> Unit,
-    onChoosePhoto: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -141,7 +143,7 @@ internal fun MainContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 25.pxToDp()),
-            onClick = { onChoosePhoto() }
+            onClick = { onEvent(GenerateArtUiEvent.OnChoosePhotoClicked) }
         )
 
         CustomGradientButton(
