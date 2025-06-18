@@ -4,11 +4,15 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.aperoaiservice.domain.repository.StyleRepository
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.utils.PermissionUtil
+import com.example.beautisdk.utils.VslBeautiConst.BASE_URL
 import com.example.beautisdk.utils.VslImageHandlerUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -18,20 +22,25 @@ internal class VslSplashViewModel : ViewModel(){
     private val _effect = Channel<VslSplashEffect>()
     val effect = _effect.receiveAsFlow()
 
-    fun preloadPhotos(context: Context) {
+    fun preloadDatas(context: Context, styleRepo: StyleRepository) {
         viewModelScope.launch(Dispatchers.IO) {
             if (PermissionUtil.hasReadExternalPermission(context)) {
-
                 if (PermissionUtil.hasReadExternalPermission(context)) {
                     try {
-                        withTimeout(3000L) {
-                            VslImageHandlerUtil.queryPhotoChunkManualIo(
-                                context = context,
-                                offset = 0,
-                                limit = 30,
-                                130.pxToDp().value.toInt(),
-                                130.pxToDp().value.toInt()
-                            )
+                        withTimeout(5000L) {
+                            val job1 = async {
+                                VslImageHandlerUtil.queryPhotoChunkManualIo(
+                                    context = context,
+                                    offset = 0,
+                                    limit = 30,
+                                    preloadWidth = 130.pxToDp().value.toInt(),
+                                    preloadHeight = 130.pxToDp().value.toInt()
+                                )
+                            }
+                            val job2 = async {
+                                styleRepo.fetchCategories(BASE_URL)
+                            }
+                            awaitAll(job1, job2)
                         }
                     } catch (e: TimeoutCancellationException) {
                         Log.w("PreloadPhotos", "Preload timed out after 3 seconds")

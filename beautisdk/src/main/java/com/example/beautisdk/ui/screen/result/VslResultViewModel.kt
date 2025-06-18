@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 internal class VslResultViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(ResultUiState())
@@ -43,6 +44,8 @@ internal class VslResultViewModel : ViewModel() {
 
         viewModelScope.launch {
             _uiState.update { it.copy(showLoadingDialog = true) }
+
+            delay(1500)
 
             val result = VslImageHandlerUtil.saveImageToExternal(context, uri)
 
