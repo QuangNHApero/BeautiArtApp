@@ -1,6 +1,7 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,8 +39,6 @@ import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.result.VslResultActivity
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 
 internal class VslArtPreviewActivity : BaseActivityPreview() {
     private val viewModel: VslArtPreviewViewModel by viewModels()
@@ -54,6 +54,7 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
     @Composable
     override fun UpdateUI(modifier: Modifier) {
         val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
 
         var showLoadingDialog by remember { mutableStateOf(false) }
         var showErrorSnackbar by remember { mutableStateOf(false) }
@@ -81,7 +82,8 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
                     }
 
                     is GenerateArtUiEffect.NavigationPhotoPicker -> {
-                        launchCustomPickPhoto()
+                        Log.d("quangnh","launcher")
+                        checkAndLaunchPickPhoto()
                     }
                 }
             }

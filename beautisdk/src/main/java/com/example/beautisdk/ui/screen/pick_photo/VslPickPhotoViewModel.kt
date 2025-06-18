@@ -2,43 +2,44 @@ package com.example.beautisdk.ui.screen.pick_photo
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
-import com.example.beautisdk.ui.screen.art.preview.GenerateArtUiEffect
-import com.example.beautisdk.ui.screen.art.preview.GenerateArtUiEvent
+import androidx.lifecycle.viewModelScope
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 internal class VslPickPhotoViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(VslPickPhotoUiState())
     val uiState: StateFlow<VslPickPhotoUiState> = _uiState.asStateFlow()
 
-    private val _effect = MutableSharedFlow<VslPickPhotoUiEffect>()
-    val effect: SharedFlow<VslPickPhotoUiEffect> = _effect.asSharedFlow()
+    private val _effect = Channel<VslPickPhotoUiEffect>()
+    val effect = _effect.receiveAsFlow()
 
     fun onEvent(event: VslPickPhotoEvent) {
-        when (event) {
-            is VslPickPhotoEvent.OnBackClicked -> {
-                _effect.tryEmit(VslPickPhotoUiEffect.BackNavigation)
-            }
-            is VslPickPhotoEvent.OnNextClicked -> {
-                _uiState.value.selectedPhoto?.let {
-                    _effect.tryEmit(VslPickPhotoUiEffect.NextNavigation(it))
+        viewModelScope.launch {
+            when (event) {
+                is VslPickPhotoEvent.OnBackClicked -> {
+                    _effect.send(VslPickPhotoUiEffect.BackNavigation)
                 }
-            }
-            is VslPickPhotoEvent.OnPhotoSelected -> {
-                if (_uiState.value.selectedPhoto != null) {
-                    _uiState.value = _uiState.value.copy(
-                        selectedPhoto = event.photo
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        selectedPhoto = event.photo,
-                        isNextEnabled = true
-                    )
+                is VslPickPhotoEvent.OnNextClicked -> {
+                    _uiState.value.selectedPhoto?.let {
+                        _effect.send(VslPickPhotoUiEffect.NextNavigation(it))
+                    }
+                }
+                is VslPickPhotoEvent.OnPhotoSelected -> {
+                    if (_uiState.value.selectedPhoto != null) {
+                        _uiState.value = _uiState.value.copy(
+                            selectedPhoto = event.photo
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            selectedPhoto = event.photo,
+                            isNextEnabled = true
+                        )
+                    }
                 }
             }
         }
