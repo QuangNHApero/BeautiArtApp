@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aperoaiservice.domain.repository.StyleRepository
+import com.example.beautisdk.data.VslBeautiRemote
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.utils.PermissionUtil
 import com.example.beautisdk.utils.VslBeautiConst.BASE_URL
@@ -38,12 +39,19 @@ internal class VslSplashViewModel : ViewModel(){
                                 )
                             }
                             val job2 = async {
-                                styleRepo.fetchCategories(BASE_URL)
+                                styleRepo.fetchCategories(BASE_URL).fold(
+                                    onSuccess = { data ->
+                                        VslBeautiRemote.remoteCategorys = data
+                                    },
+                                    onFailure = { throwable ->
+                                        Log.e(TAG, "Failed to fetch categories", throwable)
+                                    }
+                                )
                             }
                             awaitAll(job1, job2)
                         }
                     } catch (e: TimeoutCancellationException) {
-                        Log.w("PreloadPhotos", "Preload timed out after 3 seconds")
+                        Log.w(TAG, "Preload timed out after 5 seconds")
                     }
                 }
                 _effect.send(VslSplashEffect.NavigateToNextActivity)
@@ -51,6 +59,10 @@ internal class VslSplashViewModel : ViewModel(){
                 _effect.send(VslSplashEffect.NavigateToNextActivity)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "VslSplashViewModel"
     }
 }
 

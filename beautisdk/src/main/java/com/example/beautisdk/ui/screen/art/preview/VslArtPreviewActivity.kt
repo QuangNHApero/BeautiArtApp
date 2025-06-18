@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivityPreview
+import com.example.beautisdk.ui.component.ChooseStyleScreen
 import com.example.beautisdk.ui.component.CustomGradientButton
 import com.example.beautisdk.ui.component.CustomSnackbar
 import com.example.beautisdk.ui.component.LoadingDialog
@@ -93,6 +94,8 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
             MainContent(
                 state = uiState,
                 onEvent = viewModel::onEvent,
+                focusTxtColor = config.focusTxtColor,
+                focusbgColor = config.focusBgColor,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(WindowInsets.systemBars.asPaddingValues())
@@ -115,6 +118,8 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
 @Composable
 internal fun MainContent(
     state: GenerateArtUiState,
+    focusTxtColor: Color,
+    focusbgColor: Color,
     onEvent: (GenerateArtUiEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -124,7 +129,7 @@ internal fun MainContent(
             bottom = 80.pxToDp(),
             start = 25.pxToDp()
         ),
-        verticalArrangement = Arrangement.spacedBy(27.pxToDp())
+        verticalArrangement = Arrangement.spacedBy(25.pxToDp())
     ) {
         PromptCard(
             text = state.prompt,
@@ -135,13 +140,22 @@ internal fun MainContent(
                 .padding(end = 25.pxToDp())
         )
 
-
         PreviewImageCard(
             imageUri = state.photoUri,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 25.pxToDp()),
             onClick = { onEvent(GenerateArtUiEvent.OnChoosePhotoClicked) }
+        )
+
+        ChooseStyleScreen(
+            uiState = state,
+            onCategorySelected = { onEvent(GenerateArtUiEvent.OnCategorySelected(it)) },
+            onStyleSelected = { onEvent(GenerateArtUiEvent.OnStyleSelected(it)) },
+            selectedColor = focusTxtColor,
+            unselectedColor = Color.Black,
+            selectedBackgroundColor = focusbgColor,
+            modifier = Modifier.fillMaxWidth()
         )
 
         CustomGradientButton(

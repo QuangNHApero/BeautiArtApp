@@ -3,16 +3,21 @@ package com.example.beautisdk.ui.screen.art.preview
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.aperoaiservice.domain.model.CategoryArt
+import com.example.beautisdk.data.VslBeautiRemote
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class VslArtPreviewViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(GenerateArtUiState())
+    private val _uiState = MutableStateFlow(GenerateArtUiState(
+        categories = VslBeautiRemote.remoteCategorys
+    ))
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<GenerateArtUiEffect>()
@@ -22,17 +27,17 @@ internal class VslArtPreviewViewModel : ViewModel() {
         viewModelScope.launch {
             when (event) {
                 is GenerateArtUiEvent.OnPromptChanged -> {
-                    _uiState.value = _uiState.value.copy(prompt = event.prompt)
+                    _uiState.update { it.copy(prompt = event.prompt) }
                     validateGenerateButton()
                 }
 
                 is GenerateArtUiEvent.OnPhotoSelected -> {
-                    _uiState.value = _uiState.value.copy(photoUri = event.uri)
+                    _uiState.update { it.copy(photoUri = event.uri) }
                     validateGenerateButton()
                 }
 
                 is GenerateArtUiEvent.OnStyleSelected -> {
-                    _uiState.value = _uiState.value.copy(selectedStyleId = event.styleId)
+                    _uiState.update { it.copy(selectedStyleId = event.styleId) }
                     validateGenerateButton()
                 }
 
@@ -43,23 +48,37 @@ internal class VslArtPreviewViewModel : ViewModel() {
                 is GenerateArtUiEvent.OnChoosePhotoClicked -> {
                     _effect.send(GenerateArtUiEffect.NavigationPhotoPicker)
                 }
+
+                is GenerateArtUiEvent.OnCategorySelected -> {
+                    onCategorySelected(event.categoryIndex)
+                }
             }
         }
     }
 
     private fun validateGenerateButton() {
-        _uiState.value = _uiState.value.copy(
+        _uiState.update { it.copy(
             isGenerateButtonEnabled =
 //            (
 //                    !_uiState.value.prompt.isBlank() ||
 //                            uiState.value.selectedStyleId != null
 //                    ) &&
-                    uiState.value.photoUri != null
+            uiState.value.photoUri != null
         )
+        }
+    }
+
+    fun onCategorySelected(index: Int) {
+        _uiState.update {
+            it.copy(
+                selectedCategoryIndex = index,
+                selectedStyleId = null
+            )
+        }
     }
 
     fun updatePhotoUri(uri: Uri) {
-        _uiState.value = _uiState.value.copy(photoUri = uri)
+        _uiState.update { it.copy(photoUri = uri) }
         validateGenerateButton()
     }
 
@@ -80,7 +99,7 @@ internal class VslArtPreviewViewModel : ViewModel() {
 //                _effect.send(GenerateArtUiEffect.Success(resultUri!!))
 //            }
             val resultUri = _uiState.value.photoUri
-            _uiState.value = _uiState.value.copy(photoUri = resultUri)
+            _uiState.update { it.copy(photoUri = resultUri) }
             _effect.send(GenerateArtUiEffect.Success(resultUri!!))
         }
     }
@@ -90,7 +109,9 @@ internal data class GenerateArtUiState(
     val prompt: String = "",
     val photoUri: Uri? = null,
     val selectedStyleId: String? = null,
-    val isGenerateButtonEnabled: Boolean = false
+    val selectedCategoryIndex: Int = 0,
+    val isGenerateButtonEnabled: Boolean = false,
+    val categories: List<CategoryArt> = listOf()
 )
 
 internal sealed class GenerateArtUiEffect {
@@ -105,6 +126,7 @@ internal sealed class GenerateArtUiEvent {
     data class OnPromptChanged(val prompt: String) : GenerateArtUiEvent()
     data class OnPhotoSelected(val uri: Uri) : GenerateArtUiEvent()
     data class OnStyleSelected(val styleId: String) : GenerateArtUiEvent()
+    data class OnCategorySelected(val categoryIndex: Int) : GenerateArtUiEvent()
     object OnGenerateClicked : GenerateArtUiEvent()
     object OnChoosePhotoClicked : GenerateArtUiEvent()
 }
