@@ -5,13 +5,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.artbeautify.utils.ext.hideSystemBar
+import com.example.beautisdk.VslBeautiEntry
+import com.example.beautisdk.api.config.VslBeautiConfig
 import com.example.beautisdk.ui.design_system.AppTheme
 
 abstract class BaseActivity : ComponentActivity() {
+    protected val config: VslBeautiConfig by lazy {
+        VslBeautiEntry.config()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +28,7 @@ abstract class BaseActivity : ComponentActivity() {
                 UpdateUI(
                     Modifier
                         .fillMaxSize()
+                        .background(config.uiConfig.backgroundColor)
                 )
             }
         }
@@ -43,5 +50,4 @@ abstract class BaseActivity : ComponentActivity() {
 
     @Composable
     protected abstract fun UpdateUI(modifier: Modifier)
-
 }

@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 
-object SharedPref {
+internal object VslSharedPref {
     private const val PREF_NAME = "beauti_pref"
     private const val TAG = "beauti_pref"
     private lateinit var prefs: SharedPreferences

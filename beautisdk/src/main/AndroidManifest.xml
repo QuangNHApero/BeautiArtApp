@@ -9,7 +9,7 @@
 
     <application>
         <activity
-            android:name=".ui.screen.art.preview.ArtPreviewActivity"
+            android:name=".ui.screen.art.preview.VslArtPreviewActivity"
             android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.ArtBeautify"

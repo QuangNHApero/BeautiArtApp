@@ -2,26 +2,65 @@ package com.example.beautisdk.ui.screen.pick_photo
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.example.beautisdk.ui.screen.art.preview.GenerateArtUiEffect
+import com.example.beautisdk.ui.screen.art.preview.GenerateArtUiEvent
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class VslPickPhotoViewModel : ViewModel() {
+internal class VslPickPhotoViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(VslPickPhotoUiState())
     val uiState: StateFlow<VslPickPhotoUiState> = _uiState.asStateFlow()
 
-    fun onPhotoSelected(photo: PhotoItem) {
-        _uiState.value = _uiState.value.copy(
-            selectedPhoto = photo
-        )
+    private val _effect = MutableSharedFlow<VslPickPhotoUiEffect>()
+    val effect: SharedFlow<VslPickPhotoUiEffect> = _effect.asSharedFlow()
+
+    fun onEvent(event: VslPickPhotoEvent) {
+        when (event) {
+            is VslPickPhotoEvent.OnBackClicked -> {
+                _effect.tryEmit(VslPickPhotoUiEffect.BackNavigation)
+            }
+            is VslPickPhotoEvent.OnNextClicked -> {
+                _uiState.value.selectedPhoto?.let {
+                    _effect.tryEmit(VslPickPhotoUiEffect.NextNavigation(it))
+                }
+            }
+            is VslPickPhotoEvent.OnPhotoSelected -> {
+                if (_uiState.value.selectedPhoto != null) {
+                    _uiState.value = _uiState.value.copy(
+                        selectedPhoto = event.photo
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        selectedPhoto = event.photo,
+                        isNextEnabled = true
+                    )
+                }
+            }
+        }
     }
 }
 
-data class VslPickPhotoUiState(
+internal data class VslPickPhotoUiState(
     val photos: List<PhotoItem>? = fakePhotos,
-    val selectedPhoto: PhotoItem? = null
+    val selectedPhoto: PhotoItem? = null,
+    val isNextEnabled: Boolean = false
 )
+
+internal sealed class VslPickPhotoUiEffect {
+    object BackNavigation : VslPickPhotoUiEffect()
+    data class NextNavigation(val photo: PhotoItem) : VslPickPhotoUiEffect()
+}
+
+internal sealed class VslPickPhotoEvent {
+    object OnBackClicked : VslPickPhotoEvent()
+    object OnNextClicked : VslPickPhotoEvent()
+    data class OnPhotoSelected(val photo: PhotoItem) : VslPickPhotoEvent()
+}
 
 val thumbnailUrls = listOf(
     "https://static.apero.vn/video-editor-pro/ai-style-thumbnail/Neon_City_Before.jpg",
