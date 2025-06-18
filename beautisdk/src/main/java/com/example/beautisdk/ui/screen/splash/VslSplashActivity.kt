@@ -25,6 +25,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.aperoaiservice.domain.repository.StyleRepository
+import com.example.aperoaiservice.publicapi.StyleRepositoryFactory
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.pxToDp
@@ -32,10 +34,10 @@ import com.example.beautisdk.ui.design_system.pxToDp
 @SuppressLint("CustomSplashScreen")
 abstract class VslSplashActivity : BaseActivity() {
     private val viewModel: VslSplashViewModel by viewModels()
+    private val styleRepository: StyleRepository by lazy { StyleRepositoryFactory.create() }
     final override fun onBackNavigation() {
         finish()
     }
-
 
     @Composable
     override fun UpdateUI(modifier: Modifier) {
@@ -52,7 +54,7 @@ abstract class VslSplashActivity : BaseActivity() {
         }
 
         LaunchedEffect(Unit) {
-            viewModel.preloadPhotos(context)
+            viewModel.preloadDatas(context, styleRepository)
         }
         MainContent(modifier)
     }
