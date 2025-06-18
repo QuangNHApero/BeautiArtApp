@@ -21,21 +21,26 @@ internal class VslSplashViewModel : ViewModel(){
     fun preloadPhotos(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             if (PermissionUtil.hasReadExternalPermission(context)) {
-                try {
-                    withTimeout(3000L) {
-                        VslImageHandlerUtil.queryPhotoChunkManualIo(
-                            context = context,
-                            offset = 0,
-                            limit = 30,
-                            130.pxToDp().value.toInt(),
-                            130.pxToDp().value.toInt()
-                        )
+
+                if (PermissionUtil.hasReadExternalPermission(context)) {
+                    try {
+                        withTimeout(3000L) {
+                            VslImageHandlerUtil.queryPhotoChunkManualIo(
+                                context = context,
+                                offset = 0,
+                                limit = 30,
+                                130.pxToDp().value.toInt(),
+                                130.pxToDp().value.toInt()
+                            )
+                        }
+                    } catch (e: TimeoutCancellationException) {
+                        Log.w("PreloadPhotos", "Preload timed out after 3 seconds")
                     }
-                } catch (e: TimeoutCancellationException) {
-                    Log.w("PreloadPhotos", "Preload timed out after 3 seconds")
                 }
+                _effect.send(VslSplashEffect.NavigateToNextActivity)
+            } else {
+                _effect.send(VslSplashEffect.NavigateToNextActivity)
             }
-            _effect.send(VslSplashEffect.NavigateToNextActivity)
         }
     }
 }

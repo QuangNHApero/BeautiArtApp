@@ -28,7 +28,6 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.pxToDp
-import com.example.beautisdk.utils.PermissionUtil
 
 @SuppressLint("CustomSplashScreen")
 abstract class VslSplashActivity : BaseActivity() {
@@ -53,9 +52,7 @@ abstract class VslSplashActivity : BaseActivity() {
         }
 
         LaunchedEffect(Unit) {
-            if (PermissionUtil.hasReadExternalPermission(context)) {
-                viewModel.preloadPhotos(context)
-            }
+            viewModel.preloadPhotos(context)
         }
         MainContent(modifier)
     }

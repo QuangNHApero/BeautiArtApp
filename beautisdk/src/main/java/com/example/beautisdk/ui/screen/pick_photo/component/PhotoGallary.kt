@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +34,7 @@ import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 @Composable
 fun PhotoGallery(
     photoList: List<PhotoItem>?,
-    selectedPhotoId: Int?,
+    selectedPhotoId: Long?,
     selectedResId: Int,
     unselectedResId: Int,
     onPhotoClick: (PhotoItem) -> Unit,
@@ -69,14 +70,22 @@ fun PhotoGallery(
 }
 
 
-
 @Composable
 fun PhotoItem(
-    photoId: Int,
+    photoId: Long,
     photoUri: Uri,
-    onPhotoClick: (Int) -> Unit,
+    onPhotoClick: (Long) -> Unit,
     iconResId: Int,
 ) {
+    val context = LocalContext.current
+
+    val request = remember(photoUri) {
+        ImageRequest.Builder(context)
+            .data(photoUri)
+            .placeholder(R.drawable.ic_photo)
+            .crossfade(true)
+            .build()
+    }
     Box(
         modifier = Modifier
             .size(130.pxToDp())
@@ -84,11 +93,7 @@ fun PhotoItem(
             .clickable { onPhotoClick(photoId) }
     ) {
         AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(photoUri)
-                .placeholder(R.drawable.ic_photo)
-                .crossfade(true)
-                .build(),
+            model = request,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -106,7 +111,6 @@ fun PhotoItem(
         )
     }
 }
-
 
 
 @Preview(showBackground = true)
@@ -128,7 +132,7 @@ fun PreviewPhotoGalleryEmpty() {
 fun PreviewPhotoGallery() {
     val fakePhotos = List(12) { index ->
         PhotoItem(
-            id = index,
+            id = index.toLong(),
             uri = Uri.parse("https://via.placeholder.com/150?text=Photo+$index")
         )
     }

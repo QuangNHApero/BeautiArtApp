@@ -18,12 +18,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal object VslImageHandlerUtil {
     private const val TAG = "ImageHandlerUtil"
     private val _cachedPhotos = mutableListOf<PhotoItem>()
     val cachedPhotos: List<PhotoItem> get() = _cachedPhotos
-    private var isLoadFullImage = false
+    private val isLoadFullImage = AtomicBoolean(false)
 
     /**
      * Preload một ảnh từ URL vào bộ nhớ đệm.
@@ -192,7 +193,7 @@ internal object VslImageHandlerUtil {
         preloadWidth: Int,
         preloadHeight: Int
     ): List<PhotoItem> = withContext(Dispatchers.IO) {
-        if (isLoadFullImage) return@withContext emptyList()
+        if (isLoadFullImage.get()) return@withContext emptyList()
         val result = mutableListOf<PhotoItem>()
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media._ID)
@@ -216,13 +217,15 @@ internal object VslImageHandlerUtil {
 
                 val id = cursor.getLong(idColumn)
                 val uri = ContentUris.withAppendedId(collection, id)
-                result.add(PhotoItem(id.toInt(), uri))
-                _cachedPhotos.add(PhotoItem(id.toInt(), uri))
+                result.add(PhotoItem(id, uri))
+                if (_cachedPhotos.none { it.id == id }) {
+                    _cachedPhotos.add(PhotoItem(id, uri))
+                }
                 preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
                 fetchedCount++
             }
         }
-        if (result.isEmpty()) isLoadFullImage = true
+        if (result.isEmpty()) isLoadFullImage.set(true)
         return@withContext result
     }
 }

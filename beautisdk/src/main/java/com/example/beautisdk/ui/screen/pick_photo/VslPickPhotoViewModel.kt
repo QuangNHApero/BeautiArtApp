@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class VslPickPhotoViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(
@@ -23,9 +25,8 @@ internal class VslPickPhotoViewModel : ViewModel() {
         )
     )
     val uiState: StateFlow<VslPickPhotoUiState> = _uiState.asStateFlow()
-    private var currentOffset = VslImageHandlerUtil.cachedPhotos.size
-    private val batchSize = 15
-    private var isLoadingMore = false
+    private val currentOffset = AtomicInteger(VslImageHandlerUtil.cachedPhotos.size)
+    private val isLoadingMore = AtomicBoolean(false)
 
     private val _effect = Channel<VslPickPhotoUiEffect>()
     val effect = _effect.receiveAsFlow()
@@ -58,20 +59,19 @@ internal class VslPickPhotoViewModel : ViewModel() {
     }
 
     fun loadMorePhotos(context: Context) {
-        if (isLoadingMore) return
-        isLoadingMore = true
+        if (!isLoadingMore.compareAndSet(false, true)) return
 
         viewModelScope.launch(Dispatchers.IO) {
             if (PermissionUtil.hasReadExternalPermission(context)) {
                 val newPhotos = VslImageHandlerUtil.queryPhotoChunkManualIo(
                     context,
-                    offset = currentOffset,
-                    limit = batchSize,
+                    offset = currentOffset.get(),
+                    limit = BATCH_SIZE,
                     preloadWidth = 130.pxToDp().value.toInt(),
                     preloadHeight = 130.pxToDp().value.toInt()
                 )
                 if (newPhotos.isNotEmpty()) {
-                    currentOffset += newPhotos.size
+                    currentOffset.addAndGet(newPhotos.size)
                     _uiState.update { state ->
                         state.copy(
                             photos = state.photos.orEmpty() + newPhotos
@@ -79,8 +79,12 @@ internal class VslPickPhotoViewModel : ViewModel() {
                     }
                 }
             }
-            isLoadingMore = false
+            isLoadingMore.set(false)
         }
+    }
+
+    companion object {
+        private const val BATCH_SIZE = 15
     }
 }
 
