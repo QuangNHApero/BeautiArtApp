@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.lifecycleScope
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.component.CustomGradientButton
@@ -39,60 +41,56 @@ import com.example.beautisdk.ui.component.PreviewImageCard
 import com.example.beautisdk.ui.design_system.LocalCustomTypography
 import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
-import com.example.beautisdk.utils.VslImageHandlerUtil
 import com.example.beautisdk.utils.PermissionUtil
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 internal class VslResultActivity : BaseActivity() {
-    private val _effect = MutableSharedFlow<ResultUiEffect>()
-
-    private val uri: Uri? by lazy { intent.data }
+    private val viewModel: VslResultViewModel by viewModels()
     override fun onBackNavigation() {
         finish()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val uri = intent?.data
+        if (uri != null) {
+            viewModel.setImageUri(uri)
+        }
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            downloadImage()
+            viewModel.downloadImageAfterPermissionGranted(this)
         }
     }
 
     @Composable
     override fun UpdateUI(modifier: Modifier) {
-        var showLoadingDialog by remember { mutableStateOf(false) }
+        val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
+
         var showSnackbar by remember { mutableStateOf(false) }
         var message by remember { mutableStateOf(R.string.snackbar_error_network) }
         var isSuccess by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) {
-            _effect.collectLatest { effect ->
+            viewModel.effect.collect { effect ->
                 when (effect) {
-                    is ResultUiEffect.ShowLoading -> {
-                        showLoadingDialog = true
+                    is ResultUiEffect.BackNavigation -> {
+                        onBackNavigation()
                     }
-
-                    is ResultUiEffect.ShowSuccess,
-                    is ResultUiEffect.ShowError -> {
-                        showLoadingDialog = false
-                        val msg = when (effect) {
-                            is ResultUiEffect.ShowSuccess -> {
-                                isSuccess = true
-                                effect.message
-                            }
-
-                            is ResultUiEffect.ShowError -> {
-                                isSuccess = false
-                                effect.message
-                            }
-
-                            else -> R.string.snackbar_error_network
-                        }
-                        message = msg
+                    is ResultUiEffect.RequestWritePermission -> {
+                        PermissionUtil.checkAndRequestWritePermission(
+                            context,
+                            requestPermissionLauncher,
+                            onGranted = { viewModel.downloadImageAfterPermissionGranted(context) }
+                        )
+                    }
+                    is ResultUiEffect.ShowSnackbar -> {
                         showSnackbar = true
+                        message = effect.messageResId
+                        isSuccess = effect.isSuccess
                         delay(3000)
                         showSnackbar = false
                     }
@@ -102,11 +100,13 @@ internal class VslResultActivity : BaseActivity() {
 
         Box(modifier = modifier.fillMaxSize()) {
             MainContent(
+                uiState = uiState,
+                onEvent = viewModel::onEvent,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(WindowInsets.systemBars.asPaddingValues())
             )
-            if (showLoadingDialog) {
+            if (uiState.showLoadingDialog) {
                 LoadingDialog(
                     loadingResId = config.uiConfig.loadingRawId
                 )
@@ -125,10 +125,10 @@ internal class VslResultActivity : BaseActivity() {
 
     @Composable
     fun MainContent(
-        uri: Uri? = this.uri,
+        uiState: ResultUiState,
+        onEvent: (ResultUiEvent) -> Unit,
         @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
     ) {
-        val context = LocalContext.current
         Column(
             modifier = modifier.padding(
                 top = 35.pxToDp(),
@@ -142,12 +142,12 @@ internal class VslResultActivity : BaseActivity() {
                 painter = painterResource(id = config.backBtnResId),
                 contentDescription = "ic_back",
                 modifier = Modifier
-                    .clickable { onBackNavigation() }
+                    .clickable { onEvent(ResultUiEvent.OnBackClicked) }
             )
 
 
             PreviewImageCard(
-                imageUri = uri,
+                imageUri = uiState.photoUri,
                 isResult = true,
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -156,12 +156,9 @@ internal class VslResultActivity : BaseActivity() {
 
 
             CustomGradientButton(
-                isEnabled = uri != null,
+                isEnabled = uiState.photoUri != null,
                 onClick = {
-                    PermissionUtil.checkAndRequestWritePermission(
-                        context,
-                        requestPermissionLauncher
-                    )
+                    onEvent(ResultUiEvent.OnDownloadClicked)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -178,25 +175,6 @@ internal class VslResultActivity : BaseActivity() {
         }
     }
 
-    private fun downloadImage() {
-        uri?.let { imageUri ->
-            lifecycleScope.launch {
-                _effect.emit(ResultUiEffect.ShowLoading)
-
-                VslImageHandlerUtil.saveImageToExternal(
-                    context = this@VslResultActivity,
-                    uri = imageUri,
-                    onSuccess = {
-                        _effect.tryEmit(ResultUiEffect.ShowSuccess(R.string.txt_success_download))
-                    },
-                    onError = {
-                        _effect.tryEmit(ResultUiEffect.ShowError(R.string.txt_failed_download))
-                    }
-                )
-            }
-        }
-    }
-
     companion object {
         fun start(context: Context, uri: Uri) {
             val intent = Intent(context, VslResultActivity::class.java).apply {
@@ -207,8 +185,4 @@ internal class VslResultActivity : BaseActivity() {
     }
 }
 
-internal sealed class ResultUiEffect {
-    object ShowLoading : ResultUiEffect()
-    data class ShowSuccess(val message: Int) : ResultUiEffect()
-    data class ShowError(val message: Int) : ResultUiEffect()
-}
+

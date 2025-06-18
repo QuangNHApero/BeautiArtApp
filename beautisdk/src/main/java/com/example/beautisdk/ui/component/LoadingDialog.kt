@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,8 +36,19 @@ fun LoadingDialog(
     textResId: Int = R.string.loading_text,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(
+            loadingResId
+        )
+    )
+
+    val progress by animateLottieCompositionAsState(
+        composition,
+        iterations = LottieConstants.IterateForever
+    )
+
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.5f)),
         contentAlignment = Alignment.Center
@@ -45,20 +57,10 @@ fun LoadingDialog(
             modifier = Modifier
                 .clip(RoundedCornerShape(30.pxToDp()))
                 .background(colorDialog)
+                .widthIn(max = 200.pxToDp())
                 .padding(horizontal = 38.pxToDp(), vertical = 18.pxToDp())
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                val composition by rememberLottieComposition(
-                    LottieCompositionSpec.RawRes(
-                        loadingResId
-                    )
-                )
-
-                val progress by animateLottieCompositionAsState(
-                    composition,
-                    iterations = LottieConstants.IterateForever
-                )
-
                 LottieAnimation(
                     composition = composition,
                     progress = { progress },

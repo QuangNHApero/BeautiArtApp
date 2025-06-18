@@ -12,9 +12,7 @@ import coil.ImageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -62,121 +60,78 @@ internal object VslImageHandlerUtil {
         }
     }
 
-    fun saveImageToExternal(
+    suspend fun saveImageToExternal(
         context: Context,
-        uri: Uri,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val resolver = context.contentResolver
-            val inputStream = try {
-                resolver.openInputStream(uri)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                withContext(Dispatchers.Main) {
-                    Log.e(TAG, "Không thể mở ảnh từ đường dẫn: ${e.message}")
-                    onError("Không thể mở ảnh từ đường dẫn: ${e.message}")
-                }
-                return@launch
-            }
+        uri: Uri
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        val resolver = context.contentResolver
 
-            if (inputStream == null) {
-                withContext(Dispatchers.Main) {
-                    Log.e(TAG, "Không thể đọc ảnh từ URI: $uri")
-                    onError("Không thể đọc ảnh từ URI: $uri")
-                }
-                return@launch
-            }
+        val inputStream = try {
+            resolver.openInputStream(uri)
+                ?: return@withContext Result.failure(Exception("Không thể đọc ảnh từ URI: $uri"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return@withContext Result.failure(Exception("Không thể mở ảnh từ đường dẫn: ${e.message}"))
+        }
 
-            val fileName = "image_${System.currentTimeMillis()}.jpg"
+        val fileName = "image_${System.currentTimeMillis()}.jpg"
 
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    // Android 10+
-                    val contentValues = ContentValues().apply {
-                        put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                        put(
-                            MediaStore.Images.Media.RELATIVE_PATH,
-                            Environment.DIRECTORY_PICTURES + "/Beautify"
-                        )
-                        put(MediaStore.Images.Media.IS_PENDING, 1)
-                    }
-
-                    val collection =
-                        MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                    val imageUri = resolver.insert(collection, contentValues)
-
-                    if (imageUri == null) {
-                        withContext(Dispatchers.Main) {
-                            Log.e(TAG, "Không thể tạo ảnh mới trong MediaStore.")
-                            onError("Không thể tạo ảnh mới trong MediaStore.")
-                        }
-                        inputStream.close()
-                        return@launch
-                    }
-
-                    val outputStream = resolver.openOutputStream(imageUri)
-                    if (outputStream == null) {
-                        withContext(Dispatchers.Main) {
-                            Log.e(TAG, "Không thể mở OutputStream để lưu ảnh.")
-                            onError("Không thể mở OutputStream để lưu ảnh.")
-                        }
-                        inputStream.close()
-                        return@launch
-                    }
-
-                    outputStream.use {
-                        inputStream.copyTo(it)
-                        inputStream.close()
-                    }
-
-                    contentValues.clear()
-                    contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
-                    resolver.update(imageUri, contentValues, null, null)
-                } else {
-                    // Android 7–9
-                    val directory = File(
-                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                        "Beautify"
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(
+                        MediaStore.Images.Media.RELATIVE_PATH,
+                        Environment.DIRECTORY_PICTURES + "/Beautify"
                     )
-                    if (!directory.exists() && !directory.mkdirs()) {
-                        withContext(Dispatchers.Main) {
-                            Log.e(TAG, "Không thể tạo thư mục: ${directory.absolutePath}")
-                            onError("Không thể tạo thư mục: ${directory.absolutePath}")
-                        }
-                        inputStream.close()
-                        return@launch
-                    }
-
-                    val file = File(directory, fileName)
-                    FileOutputStream(file).use { output ->
-                        inputStream.copyTo(output)
-                        inputStream.close()
-                    }
-
-                    val values = ContentValues().apply {
-                        put(MediaStore.Images.Media.DATA, file.absolutePath)
-                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                    }
-                    resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
                 }
 
-                withContext(Dispatchers.Main) {
-                    onSuccess()
+                val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                val imageUri = resolver.insert(collection, contentValues)
+                    ?: return@withContext Result.failure(Exception("Không thể tạo ảnh mới trong MediaStore."))
+
+                resolver.openOutputStream(imageUri)?.use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                } ?: return@withContext Result.failure(Exception("Không thể mở OutputStream để lưu ảnh."))
+
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(imageUri, contentValues, null, null)
+
+            } else {
+                // Android 7–9
+                val directory = File(
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                    "Beautify"
+                )
+                if (!directory.exists() && !directory.mkdirs()) {
+                    return@withContext Result.failure(Exception("Không thể tạo thư mục: ${directory.absolutePath}"))
                 }
 
-            } catch (e: Exception) {
-                e.printStackTrace()
-                inputStream.close()
-                withContext(Dispatchers.Main) {
-                    Log.e(TAG, "Error saving image: ${e.message}")
-                    onError("Lỗi khi lưu ảnh: ${e.localizedMessage ?: "Không rõ lỗi"}")
+                val file = File(directory, fileName)
+                FileOutputStream(file).use { output ->
+                    inputStream.copyTo(output)
                 }
+
+                val values = ContentValues().apply {
+                    put(MediaStore.Images.Media.DATA, file.absolutePath)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                }
+                resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
             }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(Exception("Lỗi khi lưu ảnh: ${e.localizedMessage ?: "Không rõ lỗi"}"))
+        } finally {
+            inputStream.close()
         }
     }
+
 
     suspend fun checkShouldRefreshPhotos(context: Context) = withContext(Dispatchers.IO) {
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -190,10 +145,15 @@ internal object VslImageHandlerUtil {
         latestId?.let {
             val cachedFirstId = _cachedPhotos.firstOrNull()?.id
             if (cachedFirstId != null && latestId != cachedFirstId) {
-                _cachedPhotos.clear()
+                clearPhotos()
                 isLoadFullImage.set(false)
             }
         }
+    }
+
+    private fun clearPhotos() {
+        _cachedPhotos.clear()
+        _cachedIds.clear()
     }
 
     suspend fun queryPhotoChunkManualIo(

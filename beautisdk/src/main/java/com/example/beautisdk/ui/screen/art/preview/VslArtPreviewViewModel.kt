@@ -1,10 +1,8 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.beautisdk.R
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +49,12 @@ internal class VslArtPreviewViewModel : ViewModel() {
 
     private fun validateGenerateButton() {
         _uiState.value = _uiState.value.copy(
-            isGenerateButtonEnabled = (!_uiState.value.prompt.isBlank() || uiState.value.selectedStyleId != null) && uiState.value.photoUri != null
+            isGenerateButtonEnabled =
+//            (
+//                    !_uiState.value.prompt.isBlank() ||
+//                            uiState.value.selectedStyleId != null
+//                    ) &&
+                    uiState.value.photoUri != null
         )
     }
 
@@ -69,13 +72,16 @@ internal class VslArtPreviewViewModel : ViewModel() {
             val success = (0..1).random() == 1
 
             _effect.send(GenerateArtUiEffect.HideLoading)
-            if (!success) {
-                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
-            } else {
-                val resultUri = Uri.parse("TODO: generate uri")
-                _uiState.value = _uiState.value.copy(photoUri = resultUri)
-                _effect.send(GenerateArtUiEffect.Success(resultUri))
-            }
+//            if (!success) {
+//                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+//            } else {
+//                val resultUri = _uiState.value.photoUri
+//                _uiState.value = _uiState.value.copy(photoUri = resultUri)
+//                _effect.send(GenerateArtUiEffect.Success(resultUri!!))
+//            }
+            val resultUri = _uiState.value.photoUri
+            _uiState.value = _uiState.value.copy(photoUri = resultUri)
+            _effect.send(GenerateArtUiEffect.Success(resultUri!!))
         }
     }
 }

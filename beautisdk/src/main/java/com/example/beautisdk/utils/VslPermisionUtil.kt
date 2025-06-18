@@ -67,6 +67,7 @@ internal object PermissionUtil {
     fun checkAndRequestWritePermission(
         context: Context,
         launcher: ActivityResultLauncher<String>,
+        onGranted: () -> Unit
     ) {
         if (shouldRequestWritePermission()) {
             if (!hasWritePermission(context)) {
@@ -77,10 +78,10 @@ internal object PermissionUtil {
                     VslSharedPref.putValue(STORAGE_WRITE_PERMISSION_ATTEMPT, permissionAttempt + 1)
                     launcher.launch(WRITE_STORAGE_PERMISSION)
                 }
+                return
             }
-        } else {
-            launcher.launch(WRITE_STORAGE_PERMISSION)
         }
+        onGranted()
     }
 
     private fun openAppSettings(context: Context) {

@@ -3,15 +3,17 @@ package com.example.beautisdk.base
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
+import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.pick_photo.VslPickPhotoActivity
 import com.example.beautisdk.utils.PermissionUtil
 import com.example.beautisdk.utils.VslImageHandlerUtil
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 internal abstract class BaseActivityPreview : BaseActivity() {
     private lateinit var pickPhotoLauncher: ActivityResultLauncher<Intent>
@@ -24,14 +26,15 @@ internal abstract class BaseActivityPreview : BaseActivity() {
     }
 
     private fun registerLauncher() {
-        pickPhotoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val uri = result.data?.data
-                if (uri != null) {
-                    onImagePicked(uri)
+        pickPhotoLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    val uri = result.data?.data
+                    if (uri != null) {
+                        onImagePicked(uri)
+                    }
                 }
             }
-        }
 
         requestReadExternalStoragePermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestPermission()
@@ -44,16 +47,32 @@ internal abstract class BaseActivityPreview : BaseActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        lifecycleScope.launch {
+            try {
+                withTimeout(1_000) {
+                    VslImageHandlerUtil.checkShouldRefreshPhotos(this@BaseActivityPreview)
+                    VslImageHandlerUtil.queryPhotoChunkManualIo(
+                        context = this@BaseActivityPreview,
+                        offset = 0,
+                        limit = 30,
+                        preloadWidth = 130.pxToDp().value.toInt(),
+                        preloadHeight = 130.pxToDp().value.toInt()
+                    )
+                }
+            } catch (e: TimeoutCancellationException) {
+            }
+        }
+    }
+
+
     protected fun checkAndLaunchPickPhoto() {
         PermissionUtil.checkAndRequestReadPermission(
             context = this,
             launcher = requestReadExternalStoragePermissionLauncher,
             onGranted = {
-                lifecycleScope.launch {
-                    Log.d("quangnh","checkAndLaunchPickPhoto ${VslImageHandlerUtil.cachedPhotos.size}")
-                    VslImageHandlerUtil.checkShouldRefreshPhotos(this@BaseActivityPreview)
-                    launchCustomPickPhoto()
-                }
+                launchCustomPickPhoto()
             }
         )
     }

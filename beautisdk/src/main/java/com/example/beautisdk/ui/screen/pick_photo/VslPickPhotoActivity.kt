@@ -47,6 +47,14 @@ internal class VslPickPhotoActivity : BaseActivity() {
     @Composable
     override fun UpdateUI(modifier: Modifier) {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        val context = LocalContext.current
+
+        LaunchedEffect(Unit) {
+            if (uiState.photos.isNullOrEmpty()) {
+                viewModel.loadMorePhotos(context)
+            }
+        }
+
 
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
