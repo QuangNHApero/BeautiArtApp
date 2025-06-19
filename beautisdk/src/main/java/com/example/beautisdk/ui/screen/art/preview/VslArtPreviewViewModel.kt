@@ -1,9 +1,12 @@
 package com.example.beautisdk.ui.screen.art.preview
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aperoaiservice.domain.model.CategoryArt
+import com.example.artbeautify.utils.ext.isNetworkAvailable
+import com.example.beautisdk.R
 import com.example.beautisdk.data.VslBeautiRemote
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -44,7 +47,7 @@ internal class VslArtPreviewViewModel : ViewModel() {
                 }
 
                 is GenerateArtUiEvent.OnGenerateClicked -> {
-                    generateImage()
+                    generateImage(event.context)
                 }
 
                 is GenerateArtUiEvent.OnChoosePhotoClicked -> {
@@ -85,8 +88,12 @@ internal class VslArtPreviewViewModel : ViewModel() {
         validateGenerateButton()
     }
 
-    private fun generateImage() {
+    private fun generateImage(context: Context) {
         viewModelScope.launch {
+            if (!context.isNetworkAvailable()) {
+                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+                return@launch
+            }
             _effect.send(GenerateArtUiEffect.ShowLoading)
 
             delay(2000) // giả lập network
@@ -94,16 +101,13 @@ internal class VslArtPreviewViewModel : ViewModel() {
             val success = (0..1).random() == 1
 
             _effect.send(GenerateArtUiEffect.HideLoading)
-//            if (!success) {
-//                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
-//            } else {
-//                val resultUri = _uiState.value.photoUri
-//                _uiState.value = _uiState.value.copy(photoUri = resultUri)
-//                _effect.send(GenerateArtUiEffect.Success(resultUri!!))
-//            }
-            val resultUri = _uiState.value.photoUri
-            _uiState.update { it.copy(photoUri = resultUri) }
-            _effect.send(GenerateArtUiEffect.Success(resultUri!!))
+            if (!success) {
+                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+            } else {
+                val resultUri = _uiState.value.photoUri
+                _uiState.value = _uiState.value.copy(photoUri = resultUri)
+                _effect.send(GenerateArtUiEffect.Success(resultUri!!))
+            }
         }
     }
 }
@@ -130,6 +134,6 @@ internal sealed class GenerateArtUiEvent {
     data class OnPhotoSelected(val uri: Uri) : GenerateArtUiEvent()
     data class OnStyleSelected(val styleId: String) : GenerateArtUiEvent()
     data class OnCategorySelected(val categoryIndex: Int) : GenerateArtUiEvent()
-    object OnGenerateClicked : GenerateArtUiEvent()
+    data class OnGenerateClicked(val context: Context) : GenerateArtUiEvent()
     object OnChoosePhotoClicked : GenerateArtUiEvent()
 }

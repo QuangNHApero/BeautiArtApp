@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -123,6 +124,8 @@ internal fun MainContent(
     onEvent: (GenerateArtUiEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = modifier.padding(
             top = 35.pxToDp(),
@@ -160,7 +163,7 @@ internal fun MainContent(
 
         CustomGradientButton(
             isEnabled = state.isGenerateButtonEnabled,
-            onClick = { onEvent(GenerateArtUiEvent.OnGenerateClicked) },
+            onClick = { onEvent(GenerateArtUiEvent.OnGenerateClicked(context)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(end = 25.pxToDp())
