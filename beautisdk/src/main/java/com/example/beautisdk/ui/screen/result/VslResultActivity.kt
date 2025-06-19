@@ -108,7 +108,8 @@ internal class VslResultActivity : BaseActivity() {
             )
             if (uiState.showLoadingDialog) {
                 LoadingDialog(
-                    loadingResId = config.uiConfig.loadingRawId
+                    loadingResId = config.uiConfig.loadingRawId,
+                    textResId = R.string.loading_text_download,
                 )
             }
             if (showSnackbar) {

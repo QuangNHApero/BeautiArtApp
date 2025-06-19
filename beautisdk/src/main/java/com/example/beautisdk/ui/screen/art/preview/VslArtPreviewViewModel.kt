@@ -15,9 +15,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class VslArtPreviewViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(GenerateArtUiState(
-        categories = VslBeautiRemote.remoteCategorys
-    ))
+    private val _uiState = MutableStateFlow(
+        GenerateArtUiState(
+            categories = VslBeautiRemote.remoteCategorys
+        )
+    )
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<GenerateArtUiEffect>()
@@ -57,14 +59,15 @@ internal class VslArtPreviewViewModel : ViewModel() {
     }
 
     private fun validateGenerateButton() {
-        _uiState.update { it.copy(
-            isGenerateButtonEnabled =
-//            (
-//                    !_uiState.value.prompt.isBlank() ||
-//                            uiState.value.selectedStyleId != null
-//                    ) &&
-            uiState.value.photoUri != null
-        )
+        _uiState.update {
+            it.copy(
+                isGenerateButtonEnabled =
+                (
+                        !_uiState.value.prompt.isBlank() ||
+                                uiState.value.selectedStyleId != null
+                        ) &&
+                        uiState.value.photoUri != null
+            )
         }
     }
 
