@@ -28,7 +28,7 @@ abstract class BaseActivity : ComponentActivity() {
                 UpdateUI(
                     Modifier
                         .fillMaxSize()
-                        .background(config.uiConfig.backgroundColor)
+                        .background(config.backgroundColor)
                 )
             }
         }

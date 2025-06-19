@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aperoaiservice.domain.repository.StyleRepository
+import com.example.aperoaiservice.fetch.domain.repository.StyleRepository
 import com.example.beautisdk.data.VslBeautiRemote
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.utils.PermissionUtil

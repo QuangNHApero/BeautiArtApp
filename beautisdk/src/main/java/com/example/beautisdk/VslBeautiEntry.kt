@@ -10,12 +10,12 @@ import com.example.beautisdk.api.config.VslBeautiServiceConfig
 import com.example.beautisdk.api.config.VslBeautyFullSubFeatureConfig
 import com.example.beautisdk.api.config.subfeature.art.VslArtFeatureConfig
 import com.example.beautisdk.api.config.subfeature.art.VslDefaultArtFeatureConfig
+import com.example.beautisdk.api.config.subfeature.base.VslBeautiBaseConfig
+import com.example.beautisdk.api.config.subfeature.base.VslDefaultBaseConfig
 import com.example.beautisdk.api.config.subfeature.pick_photo.VslDefaultPickPhotoConfig
 import com.example.beautisdk.api.config.subfeature.pick_photo.VslPickPhotoFeatureConfig
 import com.example.beautisdk.api.config.subfeature.result.VslDefaultResultConfig
 import com.example.beautisdk.api.config.subfeature.result.VslResultFeatureConfig
-import com.example.beautisdk.api.config.ui.VslBeautiUiConfig
-import com.example.beautisdk.api.config.ui.VslDefaultUiConfig
 import com.example.beautisdk.api.model.VslBeautiCategoryFeature
 import com.example.beautisdk.utils.pref.VslSharedPref
 
@@ -28,17 +28,16 @@ object VslBeautiEntry {
     @JvmStatic
     fun init(
         context: Context,
-        common: CommonConfigBuilder.() -> Unit,
+        common: VslBeautiCommonConfig,
         service: VslBeautiServiceConfig,
         builder: SubFeatureBuilder.() -> Unit = {}
     ) {
         if (_config != null) return
 
-        val commonConfig = CommonConfigBuilder("").apply(common).build()
         val customSub = SubFeatureBuilder().apply(builder).build()
 
         _config = object : VslBeautiConfig,
-            VslBeautiCommonConfig by commonConfig,
+            VslBeautiCommonConfig by common,
             VslBeautiServiceConfig by service,
             VslBeautyFullSubFeatureConfig by customSub {}
 
@@ -58,6 +57,8 @@ object VslBeautiEntry {
 
         var fullConfig: VslBeautyFullSubFeatureConfig? = null
 
+        var baseConfig: VslBeautiBaseConfig? = null
+
         var artConfig: VslArtFeatureConfig? = null
 
         var resultConfig: VslResultFeatureConfig? = null
@@ -66,6 +67,9 @@ object VslBeautiEntry {
 
         internal fun build(): VslBeautyFullSubFeatureConfig {
             fullConfig?.let { return it }
+
+            val baseDelegate: VslBeautiBaseConfig =
+                baseConfig ?: VslDefaultBaseConfig
 
             val artDelegate: VslArtFeatureConfig =
                 artConfig ?: VslDefaultArtFeatureConfig
@@ -77,25 +81,10 @@ object VslBeautiEntry {
                 pickPhotoConfig ?: VslDefaultPickPhotoConfig
 
             return object : DefaultSubFeatureConfig(),
+                VslBeautiBaseConfig          by baseDelegate,
                 VslArtFeatureConfig          by artDelegate,
                 VslResultFeatureConfig       by resultDelegate,
                 VslPickPhotoFeatureConfig    by pickDelegate {}
-        }
-    }
-
-    class CommonConfigBuilder(
-        var appName: String
-    ) {
-        var languageCode: String = "en"
-        var uiConfig: VslBeautiUiConfig? = null
-
-        fun build(): VslBeautiCommonConfig {
-            val finalUiConfig = uiConfig ?: VslDefaultUiConfig
-            return object : VslBeautiCommonConfig {
-                override val appName = this@CommonConfigBuilder.appName
-                override val languageCode = this@CommonConfigBuilder.languageCode
-                override val uiConfig = finalUiConfig
-            }
         }
     }
 }

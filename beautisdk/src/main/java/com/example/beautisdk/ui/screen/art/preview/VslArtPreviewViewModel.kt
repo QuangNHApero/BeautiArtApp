@@ -3,7 +3,7 @@ package com.example.beautisdk.ui.screen.art.preview
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aperoaiservice.domain.model.CategoryArt
+import com.example.aperoaiservice.fetch.domain.model.CategoryArt
 import com.example.beautisdk.data.VslBeautiRemote
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay

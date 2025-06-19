@@ -25,8 +25,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.example.aperoaiservice.domain.repository.StyleRepository
-import com.example.aperoaiservice.publicapi.StyleRepositoryFactory
+import com.example.aperoaiservice.fetch.domain.repository.StyleRepository
+import com.example.aperoaiservice.fetch.publicapi.StyleRepositoryFactory
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.pxToDp
@@ -97,7 +97,7 @@ abstract class VslSplashActivity : BaseActivity() {
             modifier = modifier.fillMaxSize(),
         ) {
             Image(
-                painter = painterResource(id = config.uiConfig.backgroundLogo),
+                painter = painterResource(id = config.backgroundLogo),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -108,7 +108,7 @@ abstract class VslSplashActivity : BaseActivity() {
             )
 
             Image(
-                painter = painterResource(id = config.uiConfig.foregroundLogo),
+                painter = painterResource(id = config.foregroundLogo),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()

@@ -26,8 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.aperoaiservice.domain.model.CategoryArt
-import com.example.aperoaiservice.domain.model.StyleArt
+import com.example.aperoaiservice.fetch.domain.model.CategoryArt
+import com.example.aperoaiservice.fetch.domain.model.StyleArt
 import com.example.beautisdk.R
 import com.example.beautisdk.ui.design_system.LocalCustomTypography
 import com.example.beautisdk.ui.design_system.component.AperoTextView
