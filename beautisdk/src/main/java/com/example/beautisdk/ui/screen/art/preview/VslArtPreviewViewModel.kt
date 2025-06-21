@@ -2,7 +2,6 @@ package com.example.beautisdk.ui.screen.art.preview
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,7 +30,9 @@ internal class VslArtPreviewViewModel(
     private val dataRepository: ArtRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GenerateArtUiState())
+    private val _uiState = MutableStateFlow(GenerateArtUiState(
+        categories = skeletonCategories,
+    ))
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
     private var selectedStyle: StyleArt? = null
@@ -180,6 +181,30 @@ internal class VslArtPreviewViewModel(
         }
     }
 }
+
+// Tạo 6 danh mục giả, mỗi danh mục chứa 5 style giả
+internal val skeletonCategories: List<CategoryArt> = List(3) { catIndex ->
+
+    // 5 style placeholder cho 1 danh mục
+    val stylePlaceholders = List(5) { styleIndex ->
+        StyleArt(
+            _id            = "placeholder-${catIndex}_$styleIndex",
+            name           = "placeholder-${catIndex}_$styleIndex",
+            thumbnail      = "",
+            positivePrompt = null,
+            negativePrompt = null,
+            mode           = null,
+            basemodel      = null
+        )
+    }
+
+    CategoryArt(
+        _id    = "placeholder-$catIndex",
+        name   = "placeholder-$catIndex",
+        styles = stylePlaceholders
+    )
+}
+
 
 internal data class GenerateArtUiState(
     val prompt: String = "",

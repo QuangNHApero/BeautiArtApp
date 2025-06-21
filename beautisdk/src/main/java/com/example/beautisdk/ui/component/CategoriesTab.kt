@@ -155,6 +155,8 @@ fun StyleItem(
         ) {
             AsyncImage(
                 model = style.thumbnail,
+                placeholder = painterResource(R.drawable.ic_photo),
+                error = painterResource(R.drawable.ic_photo),
                 contentDescription = style.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -181,6 +183,6 @@ fun StyleItem(
             textStyle = LocalCustomTypography.current.Caption1.medium.copy(color = if (isSelected) selectedColor else Color.Black),
             maxLines = 1,
             marqueeEnabled = true,
-            )
+        )
     }
 }
