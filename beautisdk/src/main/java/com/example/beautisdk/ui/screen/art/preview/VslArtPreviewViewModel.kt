@@ -24,31 +24,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class VslArtPreviewViewModel(
     private val aiServiceRepository: AiArtRepository,
     private val dataRepository: ArtRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GenerateArtUiState(
-        categories = skeletonCategories,
-    ))
+    private val _uiState = MutableStateFlow(
+        GenerateArtUiState(
+            categories = skeletonCategories,
+        )
+    )
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
+    private var isFetchingCategories = AtomicBoolean(false)
     private var selectedStyle: StyleArt? = null
 
     private val _effect = Channel<GenerateArtUiEffect>()
     val effect = _effect.receiveAsFlow()
-
-    init {
-        viewModelScope.launch {
-            dataRepository.loadFromRemote().collect { categories ->
-                _uiState.update {
-                    it.copy(categories = categories)
-                }
-            }
-        }
-    }
 
     fun onEvent(event: GenerateArtUiEvent) {
         viewModelScope.launch {
@@ -86,8 +80,26 @@ internal class VslArtPreviewViewModel(
                 is GenerateArtUiEvent.OnCategorySelected -> {
                     onCategorySelected(event.categoryIndex)
                 }
+
+                is GenerateArtUiEvent.OnRefreshCategories -> {
+                    if (!isFetchingCategories.get() && _uiState.value.categories == skeletonCategories) {
+                        fetchCategories()
+                    }
+                }
             }
         }
+    }
+
+    private suspend fun fetchCategories() {
+        isFetchingCategories.set(true)
+        dataRepository.loadFromRemote().collect { categories ->
+            if (categories.isNotEmpty()) {
+                _uiState.update {
+                    it.copy(categories = categories)
+                }
+            }
+        }
+        isFetchingCategories.set(false)
     }
 
     private fun validateGenerateButton() {
@@ -131,7 +143,8 @@ internal class VslArtPreviewViewModel(
 
             result.onSuccess { file ->
                 val realPath = file.absolutePath
-                val prompt = _uiState.value.prompt.ifEmpty { selectedStyle?.positivePrompt.orEmpty() }
+                val prompt =
+                    _uiState.value.prompt.ifEmpty { selectedStyle?.positivePrompt.orEmpty() }
                 val modeInt = selectedStyle?.mode?.toIntOrNull() ?: 0
 
                 val responseResult = aiServiceRepository.genArtAi(
@@ -152,7 +165,7 @@ internal class VslArtPreviewViewModel(
                         val path = responseResult.data?.path
                         val resultUri = path?.let { File(it).toUri() }
 
-                        if (resultUri != null){
+                        if (resultUri != null) {
                             _uiState.value = _uiState.value.copy(photoUri = resultUri)
                             _effect.send(GenerateArtUiEffect.Success(resultUri))
                         } else {
@@ -160,6 +173,7 @@ internal class VslArtPreviewViewModel(
 
                         }
                     }
+
                     is ResponseState.Error -> {
 
                         val code = responseResult.code
@@ -188,19 +202,19 @@ internal val skeletonCategories: List<CategoryArt> = List(3) { catIndex ->
     // 5 style placeholder cho 1 danh mục
     val stylePlaceholders = List(5) { styleIndex ->
         StyleArt(
-            _id            = "placeholder-${catIndex}_$styleIndex",
-            name           = "placeholder-${catIndex}_$styleIndex",
-            thumbnail      = "",
+            _id = "placeholder-${catIndex}_$styleIndex",
+            name = "placeholder-${catIndex}_$styleIndex",
+            thumbnail = "",
             positivePrompt = null,
             negativePrompt = null,
-            mode           = null,
-            basemodel      = null
+            mode = null,
+            basemodel = null
         )
     }
 
     CategoryArt(
-        _id    = "placeholder-$catIndex",
-        name   = "placeholder-$catIndex",
+        _id = "placeholder-$catIndex",
+        name = "placeholder-$catIndex",
         styles = stylePlaceholders
     )
 }
@@ -230,4 +244,5 @@ internal sealed class GenerateArtUiEvent {
     data class OnCategorySelected(val categoryIndex: Int) : GenerateArtUiEvent()
     data class OnGenerateClicked(val context: Context) : GenerateArtUiEvent()
     object OnChoosePhotoClicked : GenerateArtUiEvent()
+    object OnRefreshCategories : GenerateArtUiEvent()
 }

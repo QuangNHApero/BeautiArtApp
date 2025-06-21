@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import com.example.artbeautify.utils.ext.isNetworkAvailable
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivityPreview
 import com.example.beautisdk.ui.component.ChooseStyleScreen
@@ -55,10 +57,31 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
     @Composable
     override fun UpdateUI(modifier: Modifier) {
         val uiState by viewModel.uiState.collectAsState()
+        val context = LocalContext.current
 
         var showLoadingDialog by remember { mutableStateOf(false) }
         var showErrorSnackbar by remember { mutableStateOf(false) }
         var errorMessage by remember { mutableStateOf(R.string.snackbar_error_network) }
+
+        ObserveLifecycle { event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    if (context.isNetworkAvailable()) {
+                        viewModel.onEvent(GenerateArtUiEvent.OnRefreshCategories)
+                    }
+                }
+
+                else -> Unit
+            }
+        }
+
+        ObserveWindowFocus { hasFocus ->
+            if (hasFocus && context.isNetworkAvailable()) {
+                viewModel.onEvent(GenerateArtUiEvent.OnRefreshCategories)
+            }
+        }
+
+
         LaunchedEffect(Unit) {
             viewModel.effect.collect { effect ->
                 when (effect) {
