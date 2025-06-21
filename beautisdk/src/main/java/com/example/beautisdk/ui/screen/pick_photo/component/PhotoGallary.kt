@@ -7,14 +7,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.beautisdk.R
@@ -34,6 +38,7 @@ import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 @Composable
 fun PhotoGallery(
     photoList: List<PhotoItem>?,
+    isLoading: Boolean,
     selectedPhotoId: Long?,
     selectedResId: Int,
     unselectedResId: Int,
@@ -41,9 +46,17 @@ fun PhotoGallery(
     modifier: Modifier = Modifier,
     gridState: LazyGridState = rememberLazyGridState()
 ) {
-
     if (photoList.isNullOrEmpty()) {
-        EmptyContent(modifier)
+        if (isLoading) {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            EmptyContent(modifier)
+        }
         return
     }
 
@@ -65,6 +78,19 @@ fun PhotoGallery(
                 iconResId = if (item.id == selectedPhotoId) selectedResId else unselectedResId,
                 onPhotoClick = { onPhotoClick(item) }
             )
+        }
+
+        if (isLoading) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
     }
 }
@@ -120,6 +146,7 @@ fun PreviewPhotoGalleryEmpty() {
 
     PhotoGallery(
         photoList = fakePhotos,
+        isLoading = false,
         selectedPhotoId = null,
         onPhotoClick = {},
         selectedResId = R.drawable.ic_pickphoto_selected,
@@ -139,6 +166,7 @@ fun PreviewPhotoGallery() {
 
     PhotoGallery(
         photoList = fakePhotos,
+        isLoading = false,
         selectedPhotoId = 3,
         onPhotoClick = {},
         selectedResId = R.drawable.ic_pickphoto_selected,

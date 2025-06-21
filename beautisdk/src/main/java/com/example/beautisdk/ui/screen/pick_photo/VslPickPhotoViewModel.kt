@@ -61,8 +61,9 @@ internal class VslPickPhotoViewModel : ViewModel() {
     fun loadMorePhotos(context: Context) {
         if (!isLoadingMore.compareAndSet(false, true)) return
 
-
         viewModelScope.launch(Dispatchers.IO) {
+            _effect.send(VslPickPhotoUiEffect.Loading(true))
+
             if (PermissionUtil.hasReadExternalPermission(context)) {
                 val newPhotos = VslImageHandlerUtil.queryPhotoChunkManualIo(
                     context,
@@ -81,6 +82,7 @@ internal class VslPickPhotoViewModel : ViewModel() {
                 }
             }
             isLoadingMore.set(false)
+            _effect.send(VslPickPhotoUiEffect.Loading(false))
         }
     }
     companion object {
@@ -97,6 +99,7 @@ internal data class VslPickPhotoUiState(
 internal sealed class VslPickPhotoUiEffect {
     object BackNavigation : VslPickPhotoUiEffect()
     data class NextNavigation(val photo: PhotoItem) : VslPickPhotoUiEffect()
+    data class Loading(val isLoading: Boolean) : VslPickPhotoUiEffect()
 }
 
 internal sealed class VslPickPhotoEvent {

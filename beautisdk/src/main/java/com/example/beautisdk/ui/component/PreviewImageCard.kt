@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -60,10 +61,12 @@ fun PreviewImageCard(
         if (imageUri == null) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.clickable { onClick() }) {
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize().clickable { onClick() }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_photo),
-                    contentDescription = "choose image"
+                    contentDescription = "choose image",
+                    modifier = Modifier.size(140.pxToDp())
                 )
                 Spacer(modifier = Modifier.height(16.pxToDp()))
                 AperoTextView(
@@ -89,7 +92,7 @@ fun PreviewImageCard(
                     modifier = Modifier.fillMaxSize(),
                     onSuccess = { onSuccess() }
                 )
-                if (!isResult){
+                if (!isResult) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_change_image),
                         contentDescription = "change image",

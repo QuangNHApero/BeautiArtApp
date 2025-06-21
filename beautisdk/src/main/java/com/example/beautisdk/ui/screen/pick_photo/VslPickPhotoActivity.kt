@@ -22,6 +22,9 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +51,7 @@ internal class VslPickPhotoActivity : BaseActivity() {
     override fun UpdateUI(modifier: Modifier) {
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         val context = LocalContext.current
+        var isLoading by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             if (uiState.photos.isNullOrEmpty()) {
@@ -65,12 +69,17 @@ internal class VslPickPhotoActivity : BaseActivity() {
                     is VslPickPhotoUiEffect.NextNavigation -> {
                         uiState.selectedPhoto?.let { onPhotoApply(it.uri) }
                     }
+
+                    is VslPickPhotoUiEffect.Loading -> {
+                        isLoading = effect.isLoading
+                    }
                 }
             }
         }
 
         MainContent(
             uiState = uiState,
+            isLoading = isLoading,
             onEvent = viewModel::onEvent,
             modifier = modifier
                 .fillMaxSize()
@@ -81,6 +90,7 @@ internal class VslPickPhotoActivity : BaseActivity() {
     @Composable
     fun MainContent(
         uiState: VslPickPhotoUiState,
+        isLoading: Boolean,
         onEvent: (VslPickPhotoEvent) -> Unit,
         @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
     ) {
@@ -111,6 +121,7 @@ internal class VslPickPhotoActivity : BaseActivity() {
 
             PhotoGallery(
                 photoList = uiState.photos,
+                isLoading = isLoading,
                 selectedPhotoId = uiState.selectedPhoto?.id,
                 onPhotoClick = { photo -> onEvent(VslPickPhotoEvent.OnPhotoSelected(photo)) },
                 modifier = Modifier.weight(1f),
