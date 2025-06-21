@@ -14,7 +14,11 @@ import coil.ImageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
@@ -28,7 +32,7 @@ internal object VslImageHandlerUtil {
     private val _cachedIds = mutableSetOf<Long>()
     val cachedPhotos: List<PhotoItem> get() = _cachedPhotos
     private val isLoadFullImage = AtomicBoolean(false)
-
+    private const val MAX_PARALLEL_PRELOADS = 4
     /**
      * Preload một ảnh từ URL vào bộ nhớ đệm.
      * @param context Context ứng dụng hoặc activity.
@@ -137,7 +141,36 @@ internal object VslImageHandlerUtil {
     }
 
 
-    suspend fun checkShouldRefreshPhotos(context: Context): Boolean = withContext(Dispatchers.IO) {
+    suspend fun checkShouldRefreshPhotos(
+        context: Context
+    ): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        checkShouldRefreshApi29Plus(context)
+    else
+        checkShouldRefreshLegacy(context)
+
+
+    @Suppress("NewApi")
+    private suspend fun checkShouldRefreshApi29Plus(context: Context): Boolean = withContext(Dispatchers.IO) {
+        val collection  = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val projection  = arrayOf(MediaStore.Images.Media._ID)
+
+        val args = Bundle().apply {
+            putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
+            putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                arrayOf(MediaStore.Images.Media.DATE_ADDED))
+            putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING)
+        }
+
+        val latestId = context.contentResolver
+            .query(collection, projection, args, null)
+            ?.use { if (it.moveToFirst()) it.getLong(0) else null }
+
+        latestId != null && isNewerThanCache(latestId)
+    }
+
+    private suspend fun checkShouldRefreshLegacy(context: Context): Boolean = withContext(Dispatchers.IO) {
+        if (_cachedIds.isEmpty()) return@withContext true
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media._ID)
 
@@ -148,16 +181,17 @@ internal object VslImageHandlerUtil {
             if (cursor.moveToFirst()) cursor.getLong(0) else null
         }
 
-        latestId?.let { newId ->
-            val cachedFirstId = _cachedPhotos.firstOrNull()?.id
-            if (cachedFirstId != null && newId != cachedFirstId) {
-                clearPhotos()
-                isLoadFullImage.set(false)
-                return@withContext true
-            }
-        }
+        latestId != null && isNewerThanCache(latestId)
+    }
 
-        return@withContext false
+    private fun isNewerThanCache(latestId: Long?): Boolean {
+        val cachedFirstId = _cachedIds.firstOrNull()
+        return if (cachedFirstId != null && latestId != cachedFirstId) {
+            clearPhotos()
+            true
+        } else {
+            false
+        }
     }
 
     private fun clearPhotos() {
@@ -208,14 +242,27 @@ internal object VslImageHandlerUtil {
 
         context.contentResolver.query(collection, projection, args, null)?.use { cursor ->
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            while (cursor.moveToNext() && isActive) {
-                val id  = cursor.getLong(idCol)
-                val uri = ContentUris.withAppendedId(collection, id)
 
-                if (_cachedIds.add(id)) _cachedPhotos += PhotoItem(id, uri)
-                result += PhotoItem(id, uri)
+            coroutineScope {
+                val jobs = mutableListOf<Deferred<Unit>>()
 
-                preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+                while (cursor.moveToNext() && isActive) {
+                    val id  = cursor.getLong(idCol)
+                    val uri = ContentUris.withAppendedId(collection, id)
+                    val item = PhotoItem(id, uri)
+
+                    if (_cachedIds.add(id)) _cachedPhotos += item
+                    result += item
+
+                    jobs += async(Dispatchers.IO) {
+                        preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+                    }
+
+                    if (jobs.size >= 4) {
+                        jobs.removeFirst().await()
+                    }
+                }
+                jobs.awaitAll()
             }
         }
 
@@ -248,19 +295,32 @@ internal object VslImageHandlerUtil {
 
             val idCol   = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             var fetched = 0
+            val jobs    = ArrayDeque<Deferred<Unit>>()
 
-            while (cursor.moveToNext() && fetched < limit) {
-                coroutineContext.ensureActive()
+            coroutineScope {
+                while (cursor.moveToNext() && fetched < limit) {
+                    ensureActive()
 
-                val id  = cursor.getLong(idCol)
-                val uri = ContentUris.withAppendedId(collection, id)
-                val item = PhotoItem(id, uri)
+                    val id  = cursor.getLong(idCol)
+                    val uri = ContentUris.withAppendedId(collection, id)
+                    val item = PhotoItem(id, uri)
 
-                if (_cachedIds.add(id)) _cachedPhotos += item
-                result += item
+                    if (_cachedIds.add(id)) _cachedPhotos += item
+                    result += item
 
-                preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
-                fetched++
+                    val job = async(Dispatchers.IO) {
+                        preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+                    }
+                    jobs += job
+
+                    if (jobs.size > MAX_PARALLEL_PRELOADS) {
+                        jobs.removeFirst().await()
+                    }
+
+                    fetched++
+                }
+
+                jobs.awaitAll()
             }
 
         }
