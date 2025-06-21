@@ -94,7 +94,7 @@ abstract class VslSplashActivity : BaseActivity() {
             modifier = modifier.fillMaxSize(),
         ) {
             Image(
-                painter = painterResource(id = config.uiConfig.backgroundLogo),
+                painter = painterResource(id = config.backgroundLogo),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -105,7 +105,7 @@ abstract class VslSplashActivity : BaseActivity() {
             )
 
             Image(
-                painter = painterResource(id = config.uiConfig.foregroundLogo),
+                painter = painterResource(id = config.foregroundLogo),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()

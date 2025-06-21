@@ -1,9 +1,10 @@
-package com.example.beautisdk.api.config.ui
+package com.example.beautisdk.api.config.subfeature.base
 
 import androidx.compose.ui.graphics.Color
 import com.example.beautisdk.R
+import com.example.beautisdk.api.config.subfeature.base.ui.VslBtnContent
 
-object VslDefaultUiConfig : VslBeautiUiConfig {
+object VslDefaultBaseConfig : VslBaseConfig {
     override val backgroundColor = Color.White
     override val borderColor = Color(0xFFE400D9)
     override val foregroundLogo = R.drawable.ic_launcher_foreground

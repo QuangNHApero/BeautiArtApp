@@ -1,8 +1,8 @@
-package com.example.beautisdk.api.config.ui
+package com.example.beautisdk.api.config.subfeature.base.ui
 
 import androidx.compose.ui.graphics.Color
 
-interface VslBeautiUiConfig {
+interface VslBaseUiConfig {
     val backgroundColor: Color
     val borderColor: Color
     val foregroundLogo : Int

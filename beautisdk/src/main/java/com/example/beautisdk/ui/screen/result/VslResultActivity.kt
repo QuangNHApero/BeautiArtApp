@@ -108,7 +108,7 @@ internal class VslResultActivity : BaseActivity() {
             )
             if (uiState.showLoadingDialog) {
                 LoadingDialog(
-                    loadingResId = config.uiConfig.loadingRawId,
+                    loadingResId = config.loadingRawId,
                     textResId = R.string.loading_text_download,
                 )
             }
