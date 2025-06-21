@@ -1,8 +1,8 @@
-package com.example.aperoaiservice.request
+package com.example.aperoaiservice.network.request
 
-import com.example.aperoaiservice.model.AiArtRequest
-import com.example.aperoaiservice.model.AiArtResponse
-import com.example.aperoaiservice.model.PresignedLink
+import com.example.aperoaiservice.network.model.AiArtRequest
+import com.example.aperoaiservice.network.model.AiArtResponse
+import com.example.aperoaiservice.network.model.PresignedLink
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

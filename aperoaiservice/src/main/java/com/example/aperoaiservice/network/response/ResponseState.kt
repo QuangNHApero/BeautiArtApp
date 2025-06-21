@@ -1,4 +1,4 @@
-package com.example.aperoaiservice.response
+package com.example.aperoaiservice.network.response
 
 sealed class ResponseState<out T : Any, out E : Any> {
     data class Success<T : Any>(val data: T?) : ResponseState<T, Nothing>()

@@ -7,12 +7,15 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aperoaiservice.domain.model.CategoryArt
-import com.example.aperoaiservice.model.AiArtParams
-import com.example.aperoaiservice.repository.AiArtRepository
-import com.example.aperoaiservice.response.ResponseState
+import com.example.aperoaiservice.domain.model.StyleArt
+import com.example.aperoaiservice.network.model.AiArtParams
+import com.example.aperoaiservice.network.repository.AiArtRepository
+import com.example.aperoaiservice.network.response.ResponseState
 import com.example.artbeautify.utils.ext.isNetworkAvailable
 import com.example.beautisdk.R
 import com.example.beautisdk.data.VslBeautiRemote
+import com.example.beautisdk.utils.FileUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 internal class VslArtPreviewViewModel(
@@ -32,6 +36,8 @@ internal class VslArtPreviewViewModel(
         )
     )
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
+
+    private var selectedStyle: StyleArt? = null
 
     private val _effect = Channel<GenerateArtUiEffect>()
     val effect = _effect.receiveAsFlow()
@@ -50,6 +56,13 @@ internal class VslArtPreviewViewModel(
                 }
 
                 is GenerateArtUiEvent.OnStyleSelected -> {
+                    val style = withContext(Dispatchers.Default) {
+                        _uiState.value.categories
+                            .getOrNull(_uiState.value.selectedCategoryIndex)
+                            ?.styles
+                            ?.firstOrNull { it._id == event.styleId }
+                    }
+                    selectedStyle = style
                     _uiState.update { it.copy(selectedStyleId = event.styleId) }
                     validateGenerateButton()
                 }
@@ -104,59 +117,53 @@ internal class VslArtPreviewViewModel(
             }
             _effect.send(GenerateArtUiEffect.ShowLoading)
 
-            val file = _uiState.value.photoUri?.let { copyUriToCacheFile(context, it) }
-            val realPath = file?.absolutePath
+            if (_uiState.value.photoUri == null) return@launch
 
+            val result = FileUtils.copyUriToCacheFile(context, _uiState.value.photoUri!!)
 
-            val responseResult = aiServiceRepository.genArtAi(
-                AiArtParams(
-                    pathImageOrigin = realPath!!,
-                    styleId = _uiState.value.selectedStyleId,
-                    positivePrompt = _uiState.value.prompt
+            result.onSuccess { file ->
+                val realPath = file.absolutePath
+                val prompt = _uiState.value.prompt.ifEmpty { selectedStyle?.positivePrompt.orEmpty() }
+                val modeInt = selectedStyle?.mode?.toIntOrNull() ?: 0
+
+                val responseResult = aiServiceRepository.genArtAi(
+                    AiArtParams(
+                        pathImageOrigin = realPath,
+                        styleId = _uiState.value.selectedStyleId,
+                        positivePrompt = prompt,
+                        negativePrompt = selectedStyle?.negativePrompt,
+                        baseModel = selectedStyle?.basemodel,
+                        mode = modeInt
+                    )
                 )
-            )
 
-            _effect.send(GenerateArtUiEffect.HideLoading)
+                _effect.send(GenerateArtUiEffect.HideLoading)
 
-            when (responseResult) {
-                is ResponseState.Success -> {
-                    val path = responseResult.data?.path
-                    val resultUri = path?.let { File(it).toUri() }
+                when (responseResult) {
+                    is ResponseState.Success -> {
+                        val path = responseResult.data?.path
+                        val resultUri = path?.let { File(it).toUri() }
 
-                    if (resultUri != null){
-                        _uiState.value = _uiState.value.copy(photoUri = resultUri)
-                        _effect.send(GenerateArtUiEffect.Success(resultUri))
-                    } else {
+                        if (resultUri != null){
+                            _uiState.value = _uiState.value.copy(photoUri = resultUri)
+                            _effect.send(GenerateArtUiEffect.Success(resultUri))
+                        } else {
+                            _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+
+                        }
+                    }
+                    is ResponseState.Error -> {
+                        Log.d("TAG", "generateImage: ${responseResult.error}")
+                        Log.d("TAG", "generateImage: ${responseResult.code}")
+
                         _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
-
                     }
                 }
-                is ResponseState.Error -> {
-                    Log.d("TAG", "generateImage: ${responseResult.error}")
-                    Log.d("TAG", "generateImage: ${responseResult.code}")
-
-                    _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
-                }
+            }.onFailure { error ->
+                return@launch
             }
         }
     }
-
-
-    fun copyUriToCacheFile(context: Context, uri: Uri): File {
-        val inputStream = context.contentResolver.openInputStream(uri)
-            ?: throw IllegalArgumentException("Can't open input stream from URI")
-
-        val fileName = "photo_${System.currentTimeMillis()}.jpg"
-        val tempFile = File(context.cacheDir, fileName)
-
-        tempFile.outputStream().use { output ->
-            inputStream.copyTo(output)
-        }
-
-        return tempFile
-    }
-
-
 }
 
 internal data class GenerateArtUiState(

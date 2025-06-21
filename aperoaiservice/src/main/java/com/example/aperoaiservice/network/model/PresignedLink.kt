@@ -1,4 +1,4 @@
-package com.example.aperoaiservice.model
+package com.example.aperoaiservice.network.model
 
 import com.google.gson.annotations.SerializedName
 

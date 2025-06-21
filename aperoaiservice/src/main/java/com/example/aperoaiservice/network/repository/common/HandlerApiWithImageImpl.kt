@@ -1,14 +1,13 @@
-package com.apero.aigenerate.network.repository.common
+package com.example.aperoaiservice.network.repository.common
 
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.aperoaiservice.model.PresignedLink
-import com.example.aperoaiservice.model.error.ErrorPresignedLink
-import com.example.aperoaiservice.model.error.ErrorPushImage
-import com.example.aperoaiservice.repository.common.HandlerApiWithImageRepo
-import com.example.aperoaiservice.request.PushImageService
-import com.example.aperoaiservice.response.ResponseState
+import com.example.aperoaiservice.network.model.PresignedLink
+import com.example.aperoaiservice.network.model.error.ErrorPresignedLink
+import com.example.aperoaiservice.network.model.error.ErrorPushImage
+import com.example.aperoaiservice.network.request.PushImageService
+import com.example.aperoaiservice.network.response.ResponseState
 import com.example.aperoaiservice.utils.FileHelper
 import com.example.aperoaiservice.utils.FileHelper.preProcessingPath
 import com.example.aperoaiservice.utils.ServiceConst.TIME_OUT_DURATION
@@ -217,7 +216,6 @@ internal class HandlerApiWithImageImpl(
 
     private fun createRequestBody(imageFile: File): RequestBody {
         val mimeType = when (imageFile.extension.lowercase()) {
-            "png" -> "image/png"
             "jpg", "jpeg" -> "image/jpeg"
             else -> throw IllegalArgumentException("Only PNG or JPG files are supported")
         }

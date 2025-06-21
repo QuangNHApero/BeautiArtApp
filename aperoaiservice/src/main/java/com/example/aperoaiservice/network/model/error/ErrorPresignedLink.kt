@@ -1,4 +1,4 @@
-package com.example.aperoaiservice.model.error
+package com.example.aperoaiservice.network.model.error
 
 data class ErrorPresignedLink(
     override val cause: Throwable? = null,

@@ -1,4 +1,4 @@
-package com.example.aperoaiservice.response
+package com.example.aperoaiservice.network.response
 
 import com.example.aperoaiservice.network.ApiClient
 import com.example.aperoaiservice.utils.ServiceError.CODE_TIMEOUT_ERROR

@@ -1,9 +1,9 @@
 package com.example.aperoaiservice.utils
 
-import com.apero.aigenerate.network.repository.common.HandlerApiWithImageImpl
+import com.example.aperoaiservice.network.repository.common.HandlerApiWithImageImpl
 import com.example.aperoaiservice.network.ApiClient
-import com.example.aperoaiservice.repository.AiArtRepository
-import com.example.aperoaiservice.repository.AiArtRepositoryImpl
+import com.example.aperoaiservice.network.repository.AiArtRepository
+import com.example.aperoaiservice.network.repository.AiArtRepositoryImpl
 
 object ServiceProvider {
 

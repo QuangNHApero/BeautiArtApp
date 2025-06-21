@@ -52,16 +52,17 @@ internal abstract class BaseActivityPreview : BaseActivity() {
         lifecycleScope.launch {
             try {
                 withTimeout(1_000) {
-                    VslImageHandlerUtil.checkShouldRefreshPhotos(this@BaseActivityPreview)
-                    VslImageHandlerUtil.queryPhotoChunkManualIo(
-                        context = this@BaseActivityPreview,
-                        offset = 0,
-                        limit = 30,
-                        preloadWidth = 130.pxToDp().value.toInt(),
-                        preloadHeight = 130.pxToDp().value.toInt()
-                    )
+                    if(VslImageHandlerUtil.checkShouldRefreshPhotos(this@BaseActivityPreview)) {
+                        VslImageHandlerUtil.queryPhotoChunkManualIo(
+                            context = this@BaseActivityPreview,
+                            offset = 0,
+                            limit = 30,
+                            preloadWidth = 130.pxToDp().value.toInt(),
+                            preloadHeight = 130.pxToDp().value.toInt()
+                        )
+                    }
                 }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
             }
         }
     }

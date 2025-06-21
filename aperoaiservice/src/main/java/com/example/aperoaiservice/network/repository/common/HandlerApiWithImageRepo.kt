@@ -1,7 +1,7 @@
-package com.example.aperoaiservice.repository.common
+package com.example.aperoaiservice.network.repository.common
 
-import com.example.aperoaiservice.model.PresignedLink
-import com.example.aperoaiservice.response.ResponseState
+import com.example.aperoaiservice.network.model.PresignedLink
+import com.example.aperoaiservice.network.response.ResponseState
 import retrofit2.Response
 import java.io.File
 

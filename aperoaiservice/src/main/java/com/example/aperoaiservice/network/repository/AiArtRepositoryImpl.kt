@@ -1,10 +1,10 @@
-package com.example.aperoaiservice.repository
+package com.example.aperoaiservice.network.repository
 
-import com.example.aperoaiservice.repository.common.HandlerApiWithImageRepo
-import com.example.aperoaiservice.model.AiArtParams
-import com.example.aperoaiservice.model.AiArtRequest
-import com.example.aperoaiservice.request.ArtServiceAI
-import com.example.aperoaiservice.response.ResponseState
+import com.example.aperoaiservice.network.repository.common.HandlerApiWithImageRepo
+import com.example.aperoaiservice.network.model.AiArtParams
+import com.example.aperoaiservice.network.model.AiArtRequest
+import com.example.aperoaiservice.network.request.ArtServiceAI
+import com.example.aperoaiservice.network.response.ResponseState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -40,10 +40,12 @@ internal class AiArtRepositoryImpl(
     ): AiArtRequest {
         return AiArtRequest(
             file = image,
-            style = params.style,
             styleId = params.styleId,
             positivePrompt = params.positivePrompt,
-            negativePrompt = params.negativePrompt
+            negativePrompt = params.negativePrompt,
+            mode = params.mode,
+            baseModel = params.baseModel,
+            imageSize = params.imageSize
         )
     }
 }

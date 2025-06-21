@@ -1,4 +1,4 @@
-package com.example.aperoaiservice.request
+package com.example.aperoaiservice.network.request
 
 import okhttp3.RequestBody
 import okhttp3.ResponseBody

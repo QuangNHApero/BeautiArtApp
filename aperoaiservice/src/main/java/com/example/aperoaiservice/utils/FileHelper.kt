@@ -9,8 +9,8 @@ import android.webkit.MimeTypeMap
 import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import com.example.aperoaiservice.AIServiceEntry
-import com.example.aperoaiservice.response.ResponseState
-import com.example.aperoaiservice.response.enqueueCallResult
+import com.example.aperoaiservice.network.response.ResponseState
+import com.example.aperoaiservice.network.response.enqueueCallResult
 import com.example.aperoaiservice.utils.ServiceError.CODE_FILE_NULL
 import com.example.aperoaiservice.utils.ServiceError.SAVE_FILE_ERROR
 import kotlinx.coroutines.Dispatchers
@@ -69,55 +69,6 @@ object FileHelper {
             withContext(Dispatchers.IO) {
                 file.delete()
             }
-        }
-    }
-
-
-    suspend fun deleteFolderInCache(pathFolder: String) {
-        val folder = File(pathFolder)
-        if (folder.exists()) {
-            withContext(Dispatchers.IO) {
-                folder.deleteRecursively()
-            }
-        }
-    }
-
-    suspend fun deleteAllFileInCache(cacheDir: File) {
-        if (cacheDir.listFiles().isNullOrEmpty().not()) {
-            withContext(Dispatchers.IO) {
-                cacheDir.deleteRecursively()
-            }
-        }
-    }
-
-    suspend fun handleResultState(
-        response: Call<ResponseBody>,
-        nameFolder: String,
-    ): ResponseState<File, Throwable> {
-        val folderPath = getFolderInCache(nameFolder)
-        return when (val stateEnqueueResponse = response.enqueueCallResult()) {
-            is ResponseState.Success -> {
-                stateEnqueueResponse.data?.body()?.let { body ->
-                    val name = "${UUID.randomUUID()}.png"
-                    val fileResult = File(folderPath, name)
-                    val saveResult = saveFileFromResponseBody(body, fileResult)
-                    saveResult.fold(
-                        onSuccess = {
-                            ResponseState.Success(fileResult)
-                        },
-                        onFailure = {
-                            ResponseState.Error(Throwable(SAVE_FILE_ERROR), CODE_FILE_NULL)
-                        }
-                    )
-                } ?: run {
-                    ResponseState.Error(Throwable(SAVE_FILE_ERROR), CODE_FILE_NULL)
-                }
-            }
-
-            is ResponseState.Error -> ResponseState.Error(
-                stateEnqueueResponse.error,
-                stateEnqueueResponse.code
-            )
         }
     }
 

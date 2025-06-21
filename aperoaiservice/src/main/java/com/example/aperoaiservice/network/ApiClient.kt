@@ -1,7 +1,7 @@
 package com.example.aperoaiservice.network
 
 import com.example.aperoaiservice.network.interceptor.SignatureInterceptor
-import com.example.aperoaiservice.request.ArtServiceAI
+import com.example.aperoaiservice.network.request.ArtServiceAI
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit

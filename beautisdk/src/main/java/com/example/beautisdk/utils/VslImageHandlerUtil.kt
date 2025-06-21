@@ -133,22 +133,27 @@ internal object VslImageHandlerUtil {
     }
 
 
-    suspend fun checkShouldRefreshPhotos(context: Context) = withContext(Dispatchers.IO) {
+    suspend fun checkShouldRefreshPhotos(context: Context): Boolean = withContext(Dispatchers.IO) {
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media._ID)
 
-        val latestId =
-            context.contentResolver.query(
-                collection, projection, null, null, "${MediaStore.Images.Media.DATE_ADDED} DESC"
-            )?.use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else null }
+        val latestId = context.contentResolver.query(
+            collection, projection, null, null,
+            "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getLong(0) else null
+        }
 
-        latestId?.let {
+        latestId?.let { newId ->
             val cachedFirstId = _cachedPhotos.firstOrNull()?.id
-            if (cachedFirstId != null && latestId != cachedFirstId) {
+            if (cachedFirstId != null && newId != cachedFirstId) {
                 clearPhotos()
                 isLoadFullImage.set(false)
+                return@withContext true
             }
         }
+
+        return@withContext false
     }
 
     private fun clearPhotos() {
