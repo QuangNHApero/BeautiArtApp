@@ -8,7 +8,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         VslBeautiEntry.init(
-            context =this, common = {
+            this, common = {
             appName = "ArtBeautify"
         }, BeautiServiceConfig())
     }

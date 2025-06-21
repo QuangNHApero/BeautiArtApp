@@ -2,22 +2,30 @@ package com.example.beautisdk.ui.screen.art.preview
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aperoaiservice.domain.model.CategoryArt
+import com.example.aperoaiservice.model.AiArtParams
+import com.example.aperoaiservice.repository.AiArtRepository
+import com.example.aperoaiservice.response.ResponseState
 import com.example.artbeautify.utils.ext.isNetworkAvailable
 import com.example.beautisdk.R
 import com.example.beautisdk.data.VslBeautiRemote
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
-internal class VslArtPreviewViewModel : ViewModel() {
+internal class VslArtPreviewViewModel(
+    private val aiServiceRepository: AiArtRepository
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(
         GenerateArtUiState(
             categories = VslBeautiRemote.remoteCategorys
@@ -96,20 +104,59 @@ internal class VslArtPreviewViewModel : ViewModel() {
             }
             _effect.send(GenerateArtUiEffect.ShowLoading)
 
-            delay(2000) // giả lập network
+            val file = _uiState.value.photoUri?.let { copyUriToCacheFile(context, it) }
+            val realPath = file?.absolutePath
 
-            val success = (0..1).random() == 1
+
+            val responseResult = aiServiceRepository.genArtAi(
+                AiArtParams(
+                    pathImageOrigin = realPath!!,
+                    styleId = _uiState.value.selectedStyleId,
+                    positivePrompt = _uiState.value.prompt
+                )
+            )
 
             _effect.send(GenerateArtUiEffect.HideLoading)
-            if (!success) {
-                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
-            } else {
-                val resultUri = _uiState.value.photoUri
-                _uiState.value = _uiState.value.copy(photoUri = resultUri)
-                _effect.send(GenerateArtUiEffect.Success(resultUri!!))
+
+            when (responseResult) {
+                is ResponseState.Success -> {
+                    val path = responseResult.data?.path
+                    val resultUri = path?.let { File(it).toUri() }
+
+                    if (resultUri != null){
+                        _uiState.value = _uiState.value.copy(photoUri = resultUri)
+                        _effect.send(GenerateArtUiEffect.Success(resultUri))
+                    } else {
+                        _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+
+                    }
+                }
+                is ResponseState.Error -> {
+                    Log.d("TAG", "generateImage: ${responseResult.error}")
+                    Log.d("TAG", "generateImage: ${responseResult.code}")
+
+                    _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+                }
             }
         }
     }
+
+
+    fun copyUriToCacheFile(context: Context, uri: Uri): File {
+        val inputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IllegalArgumentException("Can't open input stream from URI")
+
+        val fileName = "photo_${System.currentTimeMillis()}.jpg"
+        val tempFile = File(context.cacheDir, fileName)
+
+        tempFile.outputStream().use { output ->
+            inputStream.copyTo(output)
+        }
+
+        return tempFile
+    }
+
+
 }
 
 internal data class GenerateArtUiState(

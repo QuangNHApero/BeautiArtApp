@@ -16,6 +16,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            credentials {
+                username = "software-inhouse"
+                password = "apero@123"
+            }
+            url = uri("https://artifactory.apero.vn/artifactory/gradle-release/")
+        }
     }
 }
 

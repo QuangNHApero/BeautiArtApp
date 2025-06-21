@@ -54,4 +54,6 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation(libs.coil.compose)
     implementation(project(":aperoaiservice"))
+    implementation(libs.koin.android)
+//    implementation(libs.koin.androidx.viewmodel)
 }

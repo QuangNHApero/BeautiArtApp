@@ -1,7 +1,6 @@
 package com.example.beautisdk.ui.screen.art.preview
 
 import android.net.Uri
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,9 +38,11 @@ import com.example.beautisdk.ui.design_system.component.AperoTextView
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.ui.screen.result.VslResultActivity
 import kotlinx.coroutines.delay
+import org.koin.androidx.viewmodel.ext.android.viewModel
+
 
 internal class VslArtPreviewActivity : BaseActivityPreview() {
-    private val viewModel: VslArtPreviewViewModel by viewModels()
+    private val viewModel: VslArtPreviewViewModel by viewModel()
 
     override fun onBackNavigation() {
         finish()

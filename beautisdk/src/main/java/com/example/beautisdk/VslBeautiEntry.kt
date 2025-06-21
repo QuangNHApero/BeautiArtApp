@@ -1,6 +1,8 @@
 package com.example.beautisdk
 
+import android.app.Application
 import android.content.Context
+import com.example.aperoaiservice.AIServiceEntry
 import com.example.beautisdk.api.VslBeautiApi
 import com.example.beautisdk.api.VslBeautiApiImpl
 import com.example.beautisdk.api.config.DefaultSubFeatureConfig
@@ -17,6 +19,8 @@ import com.example.beautisdk.api.config.subfeature.result.VslResultFeatureConfig
 import com.example.beautisdk.api.config.ui.VslBeautiUiConfig
 import com.example.beautisdk.api.config.ui.VslDefaultUiConfig
 import com.example.beautisdk.api.model.VslBeautiCategoryFeature
+import com.example.beautisdk.di.appModule
+import com.example.beautisdk.utils.KoinUtils
 import com.example.beautisdk.utils.pref.VslSharedPref
 
 object VslBeautiEntry {
@@ -27,7 +31,7 @@ object VslBeautiEntry {
 
     @JvmStatic
     fun init(
-        context: Context,
+        application: Application,
         common: CommonConfigBuilder.() -> Unit,
         service: VslBeautiServiceConfig,
         builder: SubFeatureBuilder.() -> Unit = {}
@@ -42,7 +46,24 @@ object VslBeautiEntry {
             VslBeautiServiceConfig by service,
             VslBeautyFullSubFeatureConfig by customSub {}
 
-        VslSharedPref.initialize(context)
+
+
+        AIServiceEntry.initialize(
+            projectName = "Tecktrek",
+            applicationId = "for.techtrek",
+            apiKey = "sk-ePKj7HupzKwrm0BBDpKgbcptFg6zhJL7Fx0ZpfOMzhTa0w2efS",
+            application = application
+        )
+
+        KoinUtils.startKoinIfNeeded(
+            application,
+            listOf(
+                appModule
+            )
+        )
+
+
+        VslSharedPref.initialize(application.applicationContext)
     }
 
     internal fun config(): VslBeautiConfig =

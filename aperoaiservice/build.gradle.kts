@@ -41,4 +41,6 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+    implementation(libs.api.signature)
+    implementation(libs.coil.compose)
 }
