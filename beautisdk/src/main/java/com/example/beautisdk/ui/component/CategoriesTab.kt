@@ -13,12 +13,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +52,12 @@ internal fun ChooseStyleScreen(
     modifier: Modifier = Modifier
 ) {
     val selectedCategory = uiState.categories.getOrNull(uiState.selectedCategoryIndex)
+    val currentCategoryIds = remember(uiState.categories) {
+        uiState.categories.map { it._id }
+    }
+
+    // ❷ Cache state, truyền danh sách id để tự dọn
+    val getStateForCategory = rememberStyleListStateCache(currentCategoryIds)
 
     Column(modifier = modifier) {
         AperoTextView(
@@ -74,6 +84,7 @@ internal fun ChooseStyleScreen(
                 styles = it.styles,
                 selectedStyleId = uiState.selectedStyleId,
                 selectedColor = selectedBackgroundColor,
+                listState = getStateForCategory(it._id),
                 onStyleSelected = onStyleSelected
             )
         }
@@ -139,9 +150,12 @@ fun StyleList(
     styles: List<StyleArt>,
     selectedStyleId: String?,
     selectedColor: Color,
+    listState: LazyListState,
     onStyleSelected: (String) -> Unit
 ) {
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyRow(
+        state = listState,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         items(styles) { style ->
             val isSelected = style._id == selectedStyleId
             StyleItem(
@@ -202,5 +216,21 @@ fun StyleItem(
             maxLines = 1,
             marqueeEnabled = true,
         )
+    }
+}
+
+@Composable
+fun rememberStyleListStateCache(currentCategoryIds: List<String>): (String) -> LazyListState {
+    // mutableStateMap giúp Compose biết khi map thay đổi (ít khi cần, nhưng an toàn)
+    val cache = remember { mutableStateMapOf<String, LazyListState>() }
+
+    LaunchedEffect(currentCategoryIds) {
+        cache.keys.removeAll { it !in currentCategoryIds }
+    }
+    // Trả về hàm lấy State theo id
+    return remember {
+        { id: String ->
+            cache.getOrPut(id) { LazyListState() }
+        }
     }
 }
