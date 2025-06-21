@@ -33,13 +33,13 @@ internal class VslSplashViewModel(
                                 VslImageHandlerUtil.queryPhotoChunkManualIo(
                                     context = context,
                                     offset = 0,
-                                    limit = 100,
+                                    limit = 50,
                                     preloadWidth = 130.pxToDp().value.toInt(),
                                     preloadHeight = 130.pxToDp().value.toInt()
                                 )
                             }
                             val job2 = async {
-                                dataRepository.loadFromRemote().collect {}
+//                                dataRepository.loadFromRemote().collect {}
                             }
                             awaitAll(job1, job2)
                         }
