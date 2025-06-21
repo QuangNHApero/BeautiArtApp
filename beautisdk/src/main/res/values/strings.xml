@@ -2,7 +2,9 @@
     <string name="app_name">BeautiSDK</string>
     <string name="loading_text">Generating...</string>
     <string name="loading_text_download">Downloading...</string>
+
     <string name="snackbar_error_network">No internet connection! Try again later</string>
+
     <string name="textfield_placeholder">Enter your prompt...</string>
     <string name="btn_generate">Generate AI</string>
     <string name="txt_choose_style">Choose your Style</string>
