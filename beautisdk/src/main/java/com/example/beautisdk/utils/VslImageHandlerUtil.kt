@@ -1,10 +1,12 @@
 package com.example.beautisdk.utils
 
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
@@ -13,6 +15,8 @@ import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -157,11 +161,69 @@ internal object VslImageHandlerUtil {
     }
 
     private fun clearPhotos() {
-        _cachedPhotos.clear()
         _cachedIds.clear()
+        _cachedPhotos.clear()
+        isLoadFullImage.set(false)
     }
 
     suspend fun queryPhotoChunkManualIo(
+        context: Context,
+        offset: Int,
+        limit: Int,
+        preloadWidth: Int,
+        preloadHeight: Int
+    ): List<PhotoItem> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            queryPhotoChunkApi29Plus(context, offset, limit, preloadWidth, preloadHeight)
+        else
+            queryPhotoChunkLegacy  (context, offset, limit, preloadWidth, preloadHeight)
+
+    @Suppress("NewApi")
+    private suspend fun queryPhotoChunkApi29Plus(
+        context: Context,
+        offset: Int,
+        limit: Int,
+        preloadWidth: Int,
+        preloadHeight: Int
+    ): List<PhotoItem> = withContext(Dispatchers.IO) {
+
+        if (isLoadFullImage.get()) return@withContext emptyList()
+
+        val result     = mutableListOf<PhotoItem>()
+        val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Images.Media._ID)
+
+        val args = Bundle().apply {
+            putInt(ContentResolver.QUERY_ARG_LIMIT,  limit)
+            putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
+            putStringArray(
+                ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                arrayOf(MediaStore.Images.Media.DATE_ADDED)
+            )
+            putInt(
+                ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+            )
+        }
+
+        context.contentResolver.query(collection, projection, args, null)?.use { cursor ->
+            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            while (cursor.moveToNext() && isActive) {
+                val id  = cursor.getLong(idCol)
+                val uri = ContentUris.withAppendedId(collection, id)
+
+                if (_cachedIds.add(id)) _cachedPhotos += PhotoItem(id, uri)
+                result += PhotoItem(id, uri)
+
+                preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+            }
+        }
+
+        if (result.isEmpty()) isLoadFullImage.set(true)
+        return@withContext result
+    }
+
+    private suspend fun queryPhotoChunkLegacy(
         context: Context,
         offset: Int,
         limit: Int,
@@ -182,28 +244,25 @@ internal object VslImageHandlerUtil {
             null,
             sortOrder
         )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            if (!cursor.moveToPosition(offset)) return@use
 
-            val hasData = if (offset > 0) cursor.move(offset) else cursor.moveToFirst()
-            if (!hasData) return@use
+            val idCol   = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            var fetched = 0
 
-            if (cursor.moveToPosition(offset)) {
-                var fetchedCount = 0
-                do {
-                    if (fetchedCount >= limit) break
+            while (cursor.moveToNext() && fetched < limit) {
+                coroutineContext.ensureActive()
 
-                    val id = cursor.getLong(idColumn)
-                    val uri = ContentUris.withAppendedId(collection, id)
-                    result.add(PhotoItem(id, uri))
+                val id  = cursor.getLong(idCol)
+                val uri = ContentUris.withAppendedId(collection, id)
+                val item = PhotoItem(id, uri)
 
-                    if (_cachedPhotos.none { it.id == id }) {
-                        _cachedPhotos.add(PhotoItem(id, uri))
-                    }
+                if (_cachedIds.add(id)) _cachedPhotos += item
+                result += item
 
-                    preload(context = context, uri = uri, widthPx =  preloadWidth, heightPx = preloadHeight)
-                    fetchedCount++
-                } while (cursor.moveToNext())
+                preload(context, uri, widthPx = preloadWidth, heightPx = preloadHeight)
+                fetched++
             }
+
         }
 
         if (result.isEmpty()) isLoadFullImage.set(true)
