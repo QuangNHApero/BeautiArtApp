@@ -61,6 +61,7 @@ internal class VslPickPhotoViewModel : ViewModel() {
     fun loadMorePhotos(context: Context) {
         if (!isLoadingMore.compareAndSet(false, true)) return
 
+
         viewModelScope.launch(Dispatchers.IO) {
             if (PermissionUtil.hasReadExternalPermission(context)) {
                 val newPhotos = VslImageHandlerUtil.queryPhotoChunkManualIo(

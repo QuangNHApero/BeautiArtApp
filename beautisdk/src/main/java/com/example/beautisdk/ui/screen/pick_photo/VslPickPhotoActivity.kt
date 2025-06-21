@@ -88,11 +88,11 @@ internal class VslPickPhotoActivity : BaseActivity() {
         val gridState = rememberLazyGridState()
 
         LaunchedEffect(gridState) {
-            snapshotFlow { gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            snapshotFlow { gridState.layoutInfo.totalItemsCount }
                 .distinctUntilChanged()
-                .collect { lastVisibleIndex ->
-                    val totalItems = gridState.layoutInfo.totalItemsCount
-                    if (lastVisibleIndex != null && lastVisibleIndex >= totalItems - 40 && totalItems > 0) {
+                .collect { totalItems ->
+                    val lastVisibleItemIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    if (uiState.photos == null || (uiState.photos.size - lastVisibleItemIndex <= 40)) {
                         viewModel.loadMorePhotos(context)
                     }
                 }
