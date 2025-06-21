@@ -82,9 +82,8 @@ internal class VslPickPhotoViewModel : ViewModel() {
             isLoadingMore.set(false)
         }
     }
-
     companion object {
-        private const val BATCH_SIZE = 15
+        private const val BATCH_SIZE = 50
     }
 }
 

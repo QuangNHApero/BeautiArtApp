@@ -39,7 +39,7 @@ internal class VslSplashViewModel(
                                 )
                             }
                             val job2 = async {
-                                dataRepository.loadFromRemote()
+                                dataRepository.loadFromRemote().collect {}
                             }
                             awaitAll(job1, job2)
                         }
