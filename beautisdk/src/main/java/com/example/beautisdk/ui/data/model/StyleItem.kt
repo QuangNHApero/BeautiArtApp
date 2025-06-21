@@ -1,8 +1,11 @@
-package com.example.aperoaiservice.domain.model
+package com.example.beautisdk.ui.data.model
+
+import com.google.gson.annotations.SerializedName
 
 data class StyleArt(
     val _id : String,
     val name: String,
+    @SerializedName("key")
     val thumbnail: String,
     val positivePrompt: String?,
     val negativePrompt: String?,

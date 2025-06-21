@@ -4,12 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aperoaiservice.domain.repository.StyleRepository
-import com.example.beautisdk.data.VslBeautiRemote
 import com.example.beautisdk.ui.design_system.pxToDp
 import com.example.beautisdk.utils.PermissionUtil
-import com.example.beautisdk.utils.VslBeautiConst.BASE_URL
 import com.example.beautisdk.utils.VslImageHandlerUtil
+import com.example.beautisdk.utils.repository.ArtRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -19,11 +17,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
-internal class VslSplashViewModel : ViewModel(){
+internal class VslSplashViewModel(
+    private val dataRepository: ArtRepository
+) : ViewModel(){
     private val _effect = Channel<VslSplashEffect>()
     val effect = _effect.receiveAsFlow()
 
-    fun preloadDatas(context: Context, styleRepo: StyleRepository) {
+    fun preloadDatas(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             if (PermissionUtil.hasReadExternalPermission(context)) {
                 if (PermissionUtil.hasReadExternalPermission(context)) {
@@ -33,20 +33,13 @@ internal class VslSplashViewModel : ViewModel(){
                                 VslImageHandlerUtil.queryPhotoChunkManualIo(
                                     context = context,
                                     offset = 0,
-                                    limit = 30,
+                                    limit = 100,
                                     preloadWidth = 130.pxToDp().value.toInt(),
                                     preloadHeight = 130.pxToDp().value.toInt()
                                 )
                             }
                             val job2 = async {
-                                styleRepo.fetchCategories(BASE_URL).fold(
-                                    onSuccess = { data ->
-                                        VslBeautiRemote.remoteCategorys = data
-                                    },
-                                    onFailure = { throwable ->
-                                        Log.e(TAG, "Failed to fetch categories", throwable)
-                                    }
-                                )
+                                dataRepository.loadFromRemote()
                             }
                             awaitAll(job1, job2)
                         }

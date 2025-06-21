@@ -1,8 +1,8 @@
 package com.example.aperoaiservice.network.repository
 
-import com.example.aperoaiservice.network.repository.common.HandlerApiWithImageRepo
 import com.example.aperoaiservice.network.model.AiArtParams
 import com.example.aperoaiservice.network.model.AiArtRequest
+import com.example.aperoaiservice.network.repository.common.HandlerApiWithImageRepo
 import com.example.aperoaiservice.network.request.ArtServiceAI
 import com.example.aperoaiservice.network.response.ResponseState
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +31,26 @@ internal class AiArtRepositoryImpl(
                 },
                 folderName = "AI_ART"
             )
+        }
+    }
+
+    override suspend fun fetchCategories(): ResponseState<String, Throwable> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = artService.fetchCategories()
+                if (response.isSuccessful) {
+                    val body = response.body()?.string()
+                    if (!body.isNullOrEmpty()) {
+                        ResponseState.Success(body)
+                    } else {
+                        ResponseState.Error(Exception("Empty response body"), response.code())
+                    }
+                } else {
+                    ResponseState.Error(Exception(response.message()), response.code())
+                }
+            } catch (e: Exception) {
+                ResponseState.Error(throw Exception(e.message), e.hashCode())
+            }
         }
     }
 

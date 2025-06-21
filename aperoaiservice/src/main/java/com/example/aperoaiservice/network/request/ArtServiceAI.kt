@@ -3,6 +3,7 @@ package com.example.aperoaiservice.network.request
 import com.example.aperoaiservice.network.model.AiArtRequest
 import com.example.aperoaiservice.network.model.AiArtResponse
 import com.example.aperoaiservice.network.model.PresignedLink
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -18,4 +19,6 @@ internal interface ArtServiceAI : PushImageService {
         @Body requestBody: AiArtRequest,
     ): Response<AiArtResponse>
 
+    @GET("https://api-style-manager.apero.vn/category?project=techtrek&segmentValue=IN&styleType=imageToImage&isApp=true")
+    suspend fun fetchCategories(): Response<ResponseBody>
 }

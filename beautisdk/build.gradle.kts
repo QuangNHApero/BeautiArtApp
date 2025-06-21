@@ -35,7 +35,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -55,5 +54,5 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(project(":aperoaiservice"))
     implementation(libs.koin.android)
-//    implementation(libs.koin.androidx.viewmodel)
+    implementation(libs.gson)
 }

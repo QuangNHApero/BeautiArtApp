@@ -1,4 +1,4 @@
-package com.example.aperoaiservice.domain.model
+package com.example.beautisdk.ui.data.model
 
 data class CategoryArt(
     val _id : String,

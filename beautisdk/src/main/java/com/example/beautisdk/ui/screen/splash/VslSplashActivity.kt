@@ -1,7 +1,6 @@
 package com.example.beautisdk.ui.screen.splash
 
 import android.annotation.SuppressLint
-import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,16 +24,14 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.example.aperoaiservice.domain.repository.StyleRepository
-import com.example.aperoaiservice.publicapi.StyleRepositoryFactory
 import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.pxToDp
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @SuppressLint("CustomSplashScreen")
 abstract class VslSplashActivity : BaseActivity() {
-    private val viewModel: VslSplashViewModel by viewModels()
-    private val styleRepository: StyleRepository by lazy { StyleRepositoryFactory.create() }
+    private val viewModel: VslSplashViewModel by viewModel()
     final override fun onBackNavigation() {
         finish()
     }
@@ -54,7 +51,7 @@ abstract class VslSplashActivity : BaseActivity() {
         }
 
         LaunchedEffect(Unit) {
-            viewModel.preloadDatas(context, styleRepository)
+            viewModel.preloadDatas(context)
         }
         MainContent(modifier)
     }

@@ -6,15 +6,15 @@ import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aperoaiservice.domain.model.CategoryArt
-import com.example.aperoaiservice.domain.model.StyleArt
 import com.example.aperoaiservice.network.model.AiArtParams
 import com.example.aperoaiservice.network.repository.AiArtRepository
 import com.example.aperoaiservice.network.response.ResponseState
 import com.example.artbeautify.utils.ext.isNetworkAvailable
 import com.example.beautisdk.R
-import com.example.beautisdk.data.VslBeautiRemote
+import com.example.beautisdk.ui.data.model.CategoryArt
+import com.example.beautisdk.ui.data.model.StyleArt
 import com.example.beautisdk.utils.FileUtils
+import com.example.beautisdk.utils.repository.ArtRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,20 +27,27 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 internal class VslArtPreviewViewModel(
-    private val aiServiceRepository: AiArtRepository
+    private val aiServiceRepository: AiArtRepository,
+    private val dataRepository: ArtRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        GenerateArtUiState(
-            categories = VslBeautiRemote.remoteCategorys
-        )
-    )
+    private val _uiState = MutableStateFlow(GenerateArtUiState())
     val uiState: StateFlow<GenerateArtUiState> = _uiState.asStateFlow()
 
     private var selectedStyle: StyleArt? = null
 
     private val _effect = Channel<GenerateArtUiEffect>()
     val effect = _effect.receiveAsFlow()
+
+    init {
+        viewModelScope.launch {
+            dataRepository.loadFromRemote().collect { categories ->
+                _uiState.update {
+                    it.copy(categories = categories)
+                }
+            }
+        }
+    }
 
     fun onEvent(event: GenerateArtUiEvent) {
         viewModelScope.launch {
