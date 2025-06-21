@@ -160,10 +160,18 @@ internal class VslArtPreviewViewModel(
                         }
                     }
                     is ResponseState.Error -> {
-                        Log.d("TAG", "generateImage: ${responseResult.error}")
-                        Log.d("TAG", "generateImage: ${responseResult.code}")
 
-                        _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+                        val code = responseResult.code
+
+                        val errorResId = when (code) {
+                            401 -> R.string.snackbar_error_unauthorized
+                            403 -> R.string.snackbar_error_forbidden
+                            404 -> R.string.snackbar_error_not_found
+                            500 -> R.string.snackbar_error_server
+                            else -> R.string.snackbar_error_generic
+                        }
+
+                        _effect.send(GenerateArtUiEffect.ShowError(errorResId))
                     }
                 }
             }.onFailure { error ->

@@ -92,7 +92,7 @@ internal class VslPickPhotoActivity : BaseActivity() {
                 .distinctUntilChanged()
                 .collect { lastVisibleIndex ->
                     val totalItems = gridState.layoutInfo.totalItemsCount
-                    if (lastVisibleIndex != null && lastVisibleIndex >= totalItems - 15 && totalItems > 0) {
+                    if (lastVisibleIndex != null && lastVisibleIndex >= totalItems - 30 && totalItems > 0) {
                         viewModel.loadMorePhotos(context)
                     }
                 }

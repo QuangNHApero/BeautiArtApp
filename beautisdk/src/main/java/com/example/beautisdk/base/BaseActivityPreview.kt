@@ -56,7 +56,7 @@ internal abstract class BaseActivityPreview : BaseActivity() {
                         VslImageHandlerUtil.queryPhotoChunkManualIo(
                             context = this@BaseActivityPreview,
                             offset = 0,
-                            limit = 30,
+                            limit = 100,
                             preloadWidth = 130.pxToDp().value.toInt(),
                             preloadHeight = 130.pxToDp().value.toInt()
                         )
