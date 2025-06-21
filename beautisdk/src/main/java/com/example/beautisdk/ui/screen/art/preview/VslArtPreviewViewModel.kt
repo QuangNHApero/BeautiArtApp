@@ -203,7 +203,7 @@ internal val skeletonCategories: List<CategoryArt> = List(3) { catIndex ->
     val stylePlaceholders = List(5) { styleIndex ->
         StyleArt(
             _id = "placeholder-${catIndex}_$styleIndex",
-            name = "placeholder-${catIndex}_$styleIndex",
+            name = "need internet",
             thumbnail = "",
             positivePrompt = null,
             negativePrompt = null,
@@ -214,7 +214,7 @@ internal val skeletonCategories: List<CategoryArt> = List(3) { catIndex ->
 
     CategoryArt(
         _id = "placeholder-$catIndex",
-        name = "placeholder-$catIndex",
+        name = "need internet",
         styles = stylePlaceholders
     )
 }
