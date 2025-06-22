@@ -174,24 +174,29 @@ internal object VslImageHandlerUtil {
 
 
     @Suppress("NewApi")
-    private suspend fun checkShouldRefreshApi29Plus(context: Context): Boolean = withContext(Dispatchers.IO) {
-        val collection  = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        val projection  = arrayOf(MediaStore.Images.Media._ID)
+    private suspend fun checkShouldRefreshApi29Plus(context: Context): Boolean =
+        withContext(Dispatchers.IO) {
+            val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            val projection = arrayOf(MediaStore.Images.Media._ID)
 
-        val args = Bundle().apply {
-            putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
-            putStringArray(ContentResolver.QUERY_ARG_SORT_COLUMNS,
-                arrayOf(MediaStore.Images.Media.DATE_ADDED))
-            putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                ContentResolver.QUERY_SORT_DIRECTION_DESCENDING)
+            val args = Bundle().apply {
+                putInt(ContentResolver.QUERY_ARG_LIMIT, 1)
+                putStringArray(
+                    ContentResolver.QUERY_ARG_SORT_COLUMNS,
+                    arrayOf(MediaStore.Images.Media.DATE_ADDED)
+                )
+                putInt(
+                    ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                    ContentResolver.QUERY_SORT_DIRECTION_DESCENDING
+                )
+            }
+
+            val latestId = context.contentResolver
+                .query(collection, projection, args, null)
+                ?.use { if (it.moveToFirst()) it.getLong(0) else null }
+
+            latestId != null && isNewerThanCache(latestId)
         }
-
-        val latestId = context.contentResolver
-            .query(collection, projection, args, null)
-            ?.use { if (it.moveToFirst()) it.getLong(0) else null }
-
-        latestId != null && isNewerThanCache(latestId)
-    }
 
     private suspend fun checkShouldRefreshLegacy(context: Context): Boolean = withContext(Dispatchers.IO) {
         if (_cachedIds.isEmpty()) return@withContext true
@@ -234,7 +239,7 @@ internal object VslImageHandlerUtil {
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
 //            queryPhotoChunkApi29Plus(context, offset, limit, preloadWidth, preloadHeight)
 //        else
-            queryPhotoChunkLegacy  (context, offset, limit, preloadWidth, preloadHeight)
+        queryPhotoChunkLegacy(context, offset, limit, preloadWidth, preloadHeight)
 
     @Suppress("NewApi")
     private suspend fun queryPhotoChunkApi29Plus(
@@ -247,12 +252,12 @@ internal object VslImageHandlerUtil {
 
         if (isLoadFullImage.get()) return@withContext emptyList()
 
-        val result     = mutableListOf<PhotoItem>()
+        val result = mutableListOf<PhotoItem>()
         val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(MediaStore.Images.Media._ID)
 
         val args = Bundle().apply {
-            putInt(ContentResolver.QUERY_ARG_LIMIT,  limit)
+            putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
             putInt(ContentResolver.QUERY_ARG_OFFSET, offset)
             putStringArray(
                 ContentResolver.QUERY_ARG_SORT_COLUMNS,
@@ -271,7 +276,7 @@ internal object VslImageHandlerUtil {
                 val jobs = mutableListOf<Deferred<Unit>>()
 
                 while (cursor.moveToNext() && isActive) {
-                    val id  = cursor.getLong(idCol)
+                    val id = cursor.getLong(idCol)
                     val uri = ContentUris.withAppendedId(collection, id)
                     val item = PhotoItem(id, uri)
 
@@ -317,15 +322,15 @@ internal object VslImageHandlerUtil {
         )?.use { cursor ->
             if (!cursor.moveToPosition(offset)) return@use
 
-            val idCol   = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             var fetched = 0
-            val jobs    = ArrayDeque<Deferred<Unit>>()
+            val jobs = ArrayDeque<Deferred<Unit>>()
 
             coroutineScope {
-                while (cursor.moveToNext() && fetched < limit) {
+                do {
                     ensureActive()
 
-                    val id  = cursor.getLong(idCol)
+                    val id = cursor.getLong(idCol)
                     val uri = ContentUris.withAppendedId(collection, id)
                     val item = PhotoItem(id, uri)
 
@@ -342,7 +347,7 @@ internal object VslImageHandlerUtil {
                     }
 
                     fetched++
-                }
+                } while (cursor.moveToNext() && fetched < limit)
 
                 jobs.awaitAll()
             }
