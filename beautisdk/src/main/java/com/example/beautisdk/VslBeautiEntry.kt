@@ -5,7 +5,6 @@ import android.content.Context
 import com.example.aperoaiservice.AIServiceEntry
 import com.example.beautisdk.api.VslBeautiApi
 import com.example.beautisdk.api.VslBeautiApiImpl
-import com.example.beautisdk.api.config.DefaultSubFeatureConfig
 import com.example.beautisdk.api.config.VslBeautiCommonConfig
 import com.example.beautisdk.api.config.VslBeautiConfig
 import com.example.beautisdk.api.config.VslBeautiServiceConfig
@@ -85,25 +84,16 @@ object VslBeautiEntry {
         var pickPhotoConfig: VslPickPhotoFeatureConfig? = null
 
         internal fun build(): VslBeautyFullSubFeatureConfig {
-            fullConfig?.let { return it }
+            val base = baseConfig ?: VslDefaultBaseConfig
+            val art  = artConfig ?: VslDefaultArtFeatureConfig
+            val result = resultConfig ?: VslDefaultResultConfig
+            val pick = pickPhotoConfig ?: VslDefaultPickPhotoConfig
 
-            val baseCOnfig: VslBaseConfig =
-                baseConfig ?: VslDefaultBaseConfig
-
-            val artDelegate: VslArtFeatureConfig =
-                artConfig ?: VslDefaultArtFeatureConfig
-
-            val resultDelegate: VslResultFeatureConfig =
-                resultConfig ?: VslDefaultResultConfig
-
-            val pickDelegate: VslPickPhotoFeatureConfig =
-                pickPhotoConfig ?: VslDefaultPickPhotoConfig
-
-            return object : DefaultSubFeatureConfig(),
-                VslBaseConfig by baseCOnfig,
-                VslArtFeatureConfig by artDelegate,
-                VslResultFeatureConfig by resultDelegate,
-                VslPickPhotoFeatureConfig by pickDelegate {}
+            return object : VslBeautyFullSubFeatureConfig,
+                VslBaseConfig by base,
+                VslArtFeatureConfig by art,
+                VslResultFeatureConfig by result,
+                VslPickPhotoFeatureConfig by pick {}
         }
     }
 }

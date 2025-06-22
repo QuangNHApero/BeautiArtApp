@@ -113,7 +113,7 @@ internal class VslArtPreviewActivity : BaseActivityPreview() {
 
 
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
         ) {
             MainContent(

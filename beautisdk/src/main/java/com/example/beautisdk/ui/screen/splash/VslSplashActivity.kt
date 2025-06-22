@@ -2,7 +2,6 @@ package com.example.beautisdk.ui.screen.splash
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -24,7 +22,6 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.example.beautisdk.R
 import com.example.beautisdk.base.BaseActivity
 import com.example.beautisdk.ui.design_system.pxToDp
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -60,7 +57,7 @@ abstract class VslSplashActivity : BaseActivity() {
     private fun MainContent(modifier: Modifier = Modifier) {
         val composition by rememberLottieComposition(
             LottieCompositionSpec.RawRes(
-                loadingAnimation
+                config.loadingRawId
             )
         )
 
@@ -71,8 +68,7 @@ abstract class VslSplashActivity : BaseActivity() {
 
         Column(
             modifier = modifier
-                .fillMaxSize()
-                .background(backgroundColor),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -114,6 +110,4 @@ abstract class VslSplashActivity : BaseActivity() {
     }
 
     protected abstract fun toNextScreen()
-    protected val backgroundColor: Color = Color.White
-    protected val loadingAnimation: Int = R.raw.vsl_anim_loading
 }

@@ -1,6 +1,7 @@
 package com.example.beautisdk.base
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
@@ -29,6 +30,8 @@ abstract class BaseActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideSystemBar()
+        Log.d("Beauti", "bg = ${config.backgroundColor}")
+
         setContent {
             AppTheme {
                 UpdateUI(
