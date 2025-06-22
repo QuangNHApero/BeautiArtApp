@@ -10,9 +10,11 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import coil.Coil
 import coil.ImageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.example.beautisdk.ui.screen.pick_photo.data.PhotoItem
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +68,27 @@ internal object VslImageHandlerUtil {
                 Log.e(TAG, "Preload failed: ${it.message}", it)
             }
         }
+    }
+
+    suspend fun isImageUriLoadable(
+        context: Context,
+        uri: Uri,
+        sampleSizePx: Int = 4,
+    ): Boolean = withContext(Dispatchers.IO) {
+
+        val request = ImageRequest.Builder(context)
+            .data(uri)
+            .size(sampleSizePx, sampleSizePx)
+            .memoryCachePolicy(CachePolicy.DISABLED)
+            .diskCachePolicy(CachePolicy.DISABLED)
+            .networkCachePolicy(CachePolicy.ENABLED)
+            .build()
+
+        val result = runCatching {
+            Coil.imageLoader(context).execute(request)
+        }.getOrNull()
+
+        return@withContext result is SuccessResult
     }
 
     suspend fun saveImageToExternal(

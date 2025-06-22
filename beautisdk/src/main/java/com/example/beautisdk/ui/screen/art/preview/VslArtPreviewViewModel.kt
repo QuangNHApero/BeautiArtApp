@@ -13,6 +13,7 @@ import com.example.beautisdk.R
 import com.example.beautisdk.ui.data.model.CategoryArt
 import com.example.beautisdk.ui.data.model.StyleArt
 import com.example.beautisdk.utils.FileUtils
+import com.example.beautisdk.utils.VslImageHandlerUtil.isImageUriLoadable
 import com.example.beautisdk.utils.repository.ArtRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -166,11 +167,18 @@ internal class VslArtPreviewViewModel(
                         val resultUri = path?.let { File(it).toUri() }
 
                         if (resultUri != null) {
-                            _uiState.value = _uiState.value.copy(photoUri = resultUri)
-                            _effect.send(GenerateArtUiEffect.Success(resultUri))
-                        } else {
-                            _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_network))
+                            if (isImageUriLoadable(
+                                context = context,
+                                uri = resultUri,
+                            )) {
+                                _uiState.value = _uiState.value.copy(photoUri = resultUri)
+                                _effect.send(GenerateArtUiEffect.Success(resultUri))
+                            } else {
+                                _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_generic))
 
+                            }
+                        } else {
+                            _effect.send(GenerateArtUiEffect.ShowError(R.string.snackbar_error_generic))
                         }
                     }
 
