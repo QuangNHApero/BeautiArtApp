@@ -76,7 +76,7 @@ object VslBeautiEntry {
 
         var fullConfig: VslBeautyFullSubFeatureConfig? = null
 
-        val baseConfig: VslBaseConfig? = null
+        var baseConfig: VslBaseConfig? = null
 
         var artConfig: VslArtFeatureConfig? = null
 
