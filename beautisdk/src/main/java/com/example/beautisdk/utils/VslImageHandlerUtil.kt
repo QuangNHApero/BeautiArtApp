@@ -166,9 +166,10 @@ internal object VslImageHandlerUtil {
 
     suspend fun checkShouldRefreshPhotos(
         context: Context
-    ): Boolean = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-        checkShouldRefreshApi29Plus(context)
-    else
+    ): Boolean =
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+//        checkShouldRefreshApi29Plus(context)
+//    else
         checkShouldRefreshLegacy(context)
 
 
@@ -230,9 +231,9 @@ internal object VslImageHandlerUtil {
         preloadWidth: Int,
         preloadHeight: Int
     ): List<PhotoItem> =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            queryPhotoChunkApi29Plus(context, offset, limit, preloadWidth, preloadHeight)
-        else
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+//            queryPhotoChunkApi29Plus(context, offset, limit, preloadWidth, preloadHeight)
+//        else
             queryPhotoChunkLegacy  (context, offset, limit, preloadWidth, preloadHeight)
 
     @Suppress("NewApi")
