@@ -45,6 +45,12 @@ internal class VslArtPreviewViewModel(
     private val _effect = Channel<GenerateArtUiEffect>()
     val effect = _effect.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            fetchCategories()
+        }
+    }
+
     fun onEvent(event: GenerateArtUiEvent) {
         viewModelScope.launch {
             when (event) {
