@@ -84,6 +84,17 @@ object VslBeautiEntry {
         var pickPhotoConfig: VslPickPhotoFeatureConfig? = null
 
         internal fun build(): VslBeautyFullSubFeatureConfig {
+            fullConfig?.let { provided ->
+                require(
+                    baseConfig == null &&
+                            artConfig  == null &&
+                            resultConfig == null &&
+                            pickPhotoConfig == null
+                ) { "When fullConfig is set, the other fragments must be null." }
+
+                return provided
+            }
+
             val base = baseConfig ?: VslDefaultBaseConfig
             val art  = artConfig ?: VslDefaultArtFeatureConfig
             val result = resultConfig ?: VslDefaultResultConfig
