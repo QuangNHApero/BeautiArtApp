@@ -30,6 +30,7 @@ internal class VslSplashViewModel(
                     try {
                         withTimeout(5000L) {
                             val job1 = async {
+                                Log.d("quangnh", "Preloading photos...")
                                 VslImageHandlerUtil.queryPhotoChunkManualIo(
                                     context = context,
                                     offset = 0,

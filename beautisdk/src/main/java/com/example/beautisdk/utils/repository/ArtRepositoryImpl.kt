@@ -10,7 +10,6 @@ import com.example.beautisdk.utils.pref.VslSharedPrefConst.PREF_ART_TEMPLATE_STY
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
@@ -21,15 +20,13 @@ class ArtRepositoryImpl(private val aiArtRepository: AiArtRepository) : ArtRepos
 
     override suspend fun loadFromRemote(): Flow<List<CategoryArt>> = flow {
         try {
-            val resultData = aiArtRepository.fetchCategories()
+            loadFromLocal()
 
-            when (resultData) {
+            when (val resultData = aiArtRepository.fetchCategories()) {
                 is ResponseState.Success -> {
                     val json = resultData.data.orEmpty()
                     Log.d(TAG, "Result data: $json")
-                    if (json.isEmpty()) {
-                        emitAll(loadFromLocal())
-                    } else {
+                    if (json.isNotEmpty()) {
                         VslSharedPref.putValue(PREF_ART_TEMPLATE_STYLES, json)
                         val parsed = Gson().fromJson(json, ApiResponse::class.java)
                         Log.d(TAG, "Parsed result: $parsed")
@@ -39,12 +36,10 @@ class ArtRepositoryImpl(private val aiArtRepository: AiArtRepository) : ArtRepos
 
                 is ResponseState.Error -> {
                     Log.e(TAG, "Error: ${resultData.error}")
-                    emitAll(loadFromLocal())
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception: ${e.message}")
-            emitAll(loadFromLocal())
         }
     }.flowOn(Dispatchers.IO)
 
